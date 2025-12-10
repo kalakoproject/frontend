@@ -14,7 +14,7 @@ export default function TransaksiPage() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [items, setItems] = useState<
-    { product_id: number; name: string; price: number; unit: string; qty: number }[]
+    { product_id: number; name: string; price: number; unit: string; qty: number; discountPercent?: number }[]
   >([]);
 
   const [showPayModal, setShowPayModal] = useState(false);
@@ -40,6 +40,7 @@ export default function TransaksiPage() {
         price: p.selling_price,
         unit: p.unit,
         qty: 1,
+        discountPercent: 0,
       },
     ]);
     setSearch("");
@@ -52,11 +53,21 @@ export default function TransaksiPage() {
     );
   }
 
+  function updateDiscount(index: number, discountPercent: number) {
+    setItems((prev) =>
+      prev.map((it, i) => (i === index ? { ...it, discountPercent } : it))
+    );
+  }
+
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
 
-  const total = items.reduce((acc, it) => acc + it.qty * it.price, 0);
+  const total = items.reduce((acc, it) => {
+    const disc = it.discountPercent ? Number(it.discountPercent) : 0;
+    const line = it.qty * it.price * (1 - Math.max(0, Math.min(100, disc)) / 100);
+    return acc + line;
+  }, 0);
 
   // Tampilkan loading saat check auth
   if (!isReady) {
@@ -113,8 +124,10 @@ export default function TransaksiPage() {
             <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+                  <th className="text-left py-3 px-2 sm:px-4 font-bold">No.</th>
                   <th className="text-left py-3 px-2 sm:px-4 font-bold">📦 Nama Produk</th>
                   <th className="text-center py-3 px-2 sm:px-4 font-bold">📊 Qty</th>
+                  <th className="text-center py-3 px-2 sm:px-4 font-bold">% Diskon</th>
                   <th className="text-center py-3 px-2 sm:px-4 font-bold">💵 Harga Satuan</th>
                   <th className="text-center py-3 px-2 sm:px-4 font-bold">💰 Subtotal</th>
                   <th className="text-center py-3 px-2 sm:px-4 font-bold">⚙️ Aksi</th>
@@ -122,17 +135,40 @@ export default function TransaksiPage() {
               </thead>
 
               <tbody>
-                {items.map((it, i) => (
+                {items.map((it, i) => {
+                  const disc = it.discountPercent ? Number(it.discountPercent) : 0;
+                  const lineSubtotal = Math.round(it.qty * it.price * (1 - Math.max(0, Math.min(100, disc)) / 100));
+                  return (
                   <tr key={i} className="border-b border-slate-200 hover:bg-blue-50 transition-colors">
+                    <td className="py-3 px-2 sm:px-4 font-medium text-slate-900 text-xs sm:text-sm">{i+1}</td>
                     <td className="py-3 px-2 sm:px-4 font-medium text-slate-900 text-xs sm:text-sm">{it.name}</td>
 
                     <td className="text-center py-3 px-2 sm:px-4">
                       <input
                         type="number"
+                        min={0}
                         step={it.unit === "KG" ? "0.01" : "1"}
                         className="w-16 sm:w-20 border-2 border-slate-300 px-2 py-1 rounded-lg text-xs sm:text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
                         value={it.qty}
-                        onChange={(e) => updateQty(i, Number(e.target.value))}
+                        onChange={(e) => {
+                          // sanitize and prevent negative values
+                          const raw = e.target.value;
+                          // allow empty then treat as 0
+                          const num = raw === '' ? 0 : Number(raw);
+                          updateQty(i, Number.isNaN(num) ? 0 : num);
+                        }}
+                      />
+                    </td>
+
+                    <td className="text-center py-3 px-2 sm:px-4">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-16 sm:w-20 border-2 border-slate-300 px-2 py-1 rounded-lg text-xs sm:text-sm text-center focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
+                        value={disc}
+                        onChange={(e) => updateDiscount(i, Number(e.target.value))}
                       />
                     </td>
 
@@ -141,7 +177,7 @@ export default function TransaksiPage() {
                     </td>
 
                     <td className="text-center py-3 px-2 sm:px-4 font-bold text-slate-900 text-xs sm:text-sm">
-                      Rp {(it.qty * it.price).toLocaleString("id-ID", {notation: 'compact', compactDisplay: 'short'})}
+                      Rp {Number(lineSubtotal).toLocaleString("id-ID", {notation: 'compact', compactDisplay: 'short'})}
                     </td>
 
                     <td className="text-center py-3 px-2 sm:px-4">
@@ -153,7 +189,8 @@ export default function TransaksiPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
 
                 {items.length === 0 && (
                   <tr>
@@ -174,12 +211,24 @@ export default function TransaksiPage() {
                 <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700 mb-3">
                   Rp {total.toLocaleString("id-ID")}
                 </p>
-                <button
-                  onClick={() => setShowPayModal(true)}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold text-sm sm:text-base rounded-lg hover:from-green-700 hover:to-green-800 hover:shadow-lg transition-all shadow-md"
-                >
-                  💳 Proses Pembayaran
-                </button>
+                <div className="flex gap-2 justify-center sm:justify-end">
+                  <button
+                    onClick={() => {
+                      if (!confirm('Batal transaksi dan kosongkan keranjang?')) return;
+                      setItems([]);
+                    }}
+                    className="px-4 sm:px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm sm:text-base rounded-lg hover:from-red-600 hover:to-red-700 hover:shadow-lg transition-all shadow-md"
+                  >
+                    ❌ Batal
+                  </button>
+
+                  <button
+                    onClick={() => setShowPayModal(true)}
+                    className="px-4 sm:px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold text-sm sm:text-base rounded-lg hover:from-green-700 hover:to-green-800 hover:shadow-lg transition-all shadow-md"
+                  >
+                    💳 Proses Pembayaran
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -217,6 +266,7 @@ function PayModal({
   onSuccess: () => void;
 }) {
   const [paid, setPaid] = useState(0);
+  const [paidInput, setPaidInput] = useState("");
   const change = paid - total;
 
   async function handlePay() {
@@ -258,10 +308,16 @@ function PayModal({
           <div>
             <label className="block text-sm font-bold text-slate-900 mb-2">💵 Nominal Pembayaran</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="border-2 border-slate-300 w-full px-4 py-3 rounded-lg text-lg font-semibold focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
-              value={paid}
-              onChange={(e) => setPaid(Number(e.target.value))}
+              value={paidInput}
+              onChange={(e) => {
+                const cleaned = String(e.target.value).replace(/[^0-9]/g, '');
+                setPaidInput(cleaned);
+                setPaid(cleaned ? Number(cleaned) : 0);
+              }}
               autoFocus
             />
           </div>
