@@ -18,11 +18,13 @@ import CategoryFormModal from "@/components/categoryForm";
  * ============================================================ */
 
 export default function RetailStockPage() {
-  const { isReady } = useProtectedPage();
+  const { isReady, user } = useProtectedPage();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  const [storePhoto, setStorePhoto] = useState<string | null>(null);
+  const [storeName, setStoreName] = useState<string>("");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
@@ -44,9 +46,13 @@ export default function RetailStockPage() {
   }
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !user) return;
+    // Load client info with store photo
+    const clientInfo = user.client || {};
+    setStoreName(clientInfo.name || "");
+    setStorePhoto(clientInfo.store_photo_url || null);
     loadData();
-  }, [search, categoryId, isReady]);
+  }, [search, categoryId, isReady, user]);
 
   // Tampilkan loading saat check auth
   if (!isReady) {
@@ -133,16 +139,18 @@ export default function RetailStockPage() {
                     <td className="py-3 px-2 sm:px-4 font-medium text-slate-900 text-xs sm:text-sm">{p.name}</td>
                     <td className="text-center py-3 px-2 sm:px-4 text-slate-600 text-xs sm:text-sm">{p.unit}</td>
                     <td className="text-center py-3 px-2 sm:px-4 font-bold text-green-600 text-xs sm:text-sm">
-                      Rp {Number(p.selling_price).toLocaleString("id-ID", {notation: 'compact', compactDisplay: 'short'})}
+                      {(Number(p.selling_price) || 0).toLocaleString('id-ID')}
                     </td>
-                    <td className="text-center py-3 px-2 sm:px-4 font-bold text-slate-900 text-xs sm:text-sm">{p.stock}</td>
+                    <td className="text-center py-3 px-2 sm:px-4 font-bold text-slate-900 text-xs sm:text-sm">{Number(p.stock).toFixed(4).replace(/\.?0+$/, '')}</td>
                     <td className="text-center py-3 px-2 sm:px-4 text-slate-600 hidden lg:table-cell text-xs sm:text-sm">
                       {p.expiry_date
                         ? new Date(p.expiry_date).toLocaleDateString("id-ID")
                         : "—"}
                     </td>
                     <td className="text-center py-3 px-2 sm:px-4">
-                      <StockStatusBadge stock={p.stock} expiry={p.expiry_date} />
+                      <div className="flex gap-2 justify-center flex-wrap">
+                        <StockStatusBadge stock={p.stock} expiry={p.expiry_date} />
+                      </div>
                     </td>
                     <td className="text-center py-3 px-2 sm:px-4">
                       <div className="flex gap-1 justify-center flex-wrap">
@@ -230,38 +238,55 @@ function StockStatusBadge({
   stock: number;
   expiry?: string | null;
 }) {
-  const isExpiredSoon =
-    expiry &&
-    new Date(expiry).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
+  // Status Kadalauwarsa (sebelah kiri)
+  let expiryBadge = null;
+  const isExpired = expiry && new Date(expiry).getTime() < Date.now();
+  if (isExpired) {
+    expiryBadge = (
+      <span className="inline-block px-2 py-1 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
+        ❌ Kadalauwarsa
+      </span>
+    );
+  } else {
+    const isExpiredSoon =
+      expiry &&
+      new Date(expiry).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
+    if (isExpiredSoon) {
+      expiryBadge = (
+        <span className="inline-block px-2 py-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
+          ⚠️ Mau Kadalauwarsa
+        </span>
+      );
+    }
+  }
 
+  // Status Stok (sebelah kanan)
+  let stockBadge = null;
   if (stock === 0) {
-    return (
-      <span className="inline-block px-3 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full text-xs font-bold shadow-md">
-        🚫 Habis
+    stockBadge = (
+      <span className="inline-block px-2 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
+        🚫 Stok Habis
       </span>
     );
-  }
-
-  if (isExpiredSoon) {
-    return (
-      <span className="inline-block px-3 py-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full text-xs font-bold shadow-md">
-        ⚠️ Segera Kadaluarsa
+  } else if (stock < 10) {
+    stockBadge = (
+      <span className="inline-block px-2 py-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
+        📉 Stok Sedikit
       </span>
     );
-  }
-
-  if (stock < 10) {
-    return (
-      <span className="inline-block px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full text-xs font-bold shadow-md">
-        📉 Menipis
+  } else {
+    stockBadge = (
+      <span className="inline-block px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
+        ✅ Stok Ada
       </span>
     );
   }
 
   return (
-    <span className="inline-block px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full text-xs font-bold shadow-md">
-      ✅ Banyak
-    </span>
+    <div className="flex flex-col gap-1">
+      {expiryBadge}
+      {stockBadge}
+    </div>
   );
 }
 

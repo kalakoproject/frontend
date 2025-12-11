@@ -4,6 +4,9 @@ import type { ReactNode } from "react";
 export const metadata = {
   title: "Kalako ERP",
   description: "Multi-tenant ERP",
+  icons: {
+    icon: "/kalakofav.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

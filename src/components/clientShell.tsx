@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { logout } from "@/lib/api";
+import { logout, getClientInfo, getApiBase } from "@/lib/api";
 import { useEffect, useState } from "react";
 
 export default function ClientShell({
@@ -15,10 +15,24 @@ export default function ClientShell({
     const router = useRouter();
 
     const [storeName, setStoreName] = useState("");
+    const [storePhoto, setStorePhoto] = useState<string | null>(null);
 
     useEffect(() => {
         const host = window.location.hostname.split(".")[0];
         setStoreName(host.replace("-", " "));
+        
+        // Get store photo from database via API
+        getClientInfo()
+            .then((data) => {
+                if (data && data.store_photo_url) {
+                    // Construct full URL with backend base URL
+                    const fullUrl = `${getApiBase()}${data.store_photo_url}`;
+                    setStorePhoto(fullUrl);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to load client info:", err);
+            });
     }, []);
 
     async function handleLogout() {
@@ -37,6 +51,15 @@ export default function ClientShell({
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col md:flex-row">
             {/* SIDEBAR */}
             <aside className="w-full md:w-64 bg-gradient-to-b from-slate-900 to-slate-800 shadow-xl flex flex-col p-4 md:min-h-screen">
+                {/* Store Photo */}
+                <div className="mb-6">
+                    <img
+                        src={storePhoto || "/kalako_logo.png"}
+                        alt={storeName}
+                        className="w-full h-20 object-cover shadow-md"
+                    />
+                </div>
+
                 <div className="mb-8 text-white">
                     <h1 className="text-2xl font-bold capitalize tracking-tight">{storeName}</h1>
                     <p className="text-xs text-slate-300 -mt-1 font-medium">Dashboard Toko</p>
@@ -69,6 +92,14 @@ export default function ClientShell({
                         className="px-4 py-3 rounded-lg text-white font-medium hover:bg-purple-600 hover:shadow-lg transition-all duration-200 flex items-center gap-2"
                     >
                         📜 Histori Transaksi
+                    </Link>
+
+
+                    <Link
+                        href="/laporan"
+                        className="px-4 py-3 rounded-lg text-white font-medium hover:bg-purple-600 hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                    >
+                        📈 Laporan Keuangan
                     </Link>
                 </nav>
 

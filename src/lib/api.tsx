@@ -197,6 +197,22 @@ export async function login(payload: { username: string; password: string }) {
  *  DASHBOARD API (Daily / Monthly / Yearly)
  * ============================================================ */
 
+export async function getClientInfo() {
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/api/dashboard/client-info`, {
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, "Gagal memuat info toko");
+    throw new Error(msg || "Gagal memuat info toko");
+  }
+
+  return parseJsonSafe(res);
+}
+
 export async function getDashboardSummary(
   range: "daily" | "monthly" | "yearly"
 ) {
@@ -452,4 +468,53 @@ export async function logout() {
   }
 }
 
+/* ============================================================
+ *  REPORTS API
+ * ============================================================ */
 
+export async function getProductReport(params: {
+  range?: "daily" | "monthly" | "yearly";
+  limit?: number;
+  offset?: number;
+}) {
+  const base = getApiBase();
+  const q = new URLSearchParams();
+  if (params.range) q.set("range", params.range);
+  if (params.limit) q.set("limit", String(params.limit));
+  if (params.offset) q.set("offset", String(params.offset));
+
+  const res = await fetch(`${base}/api/reports/products?${q.toString()}`, {
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, "Gagal memuat laporan produk");
+    throw new Error(msg || "Gagal memuat laporan produk");
+  }
+
+  return parseJsonSafe(res);
+}
+
+export function exportProductReport(range: string, format: "pdf" | "excel") {
+  const base = getApiBase();
+  const url = `${base}/api/reports/products/export?range=${range}&format=${format}`;
+  // simply return URL for direct download in browser using authentication via cookie or token
+  return url;
+}
+
+export async function getMonthlySalesData() {
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/api/reports/monthly-sales`, {
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, "Gagal memuat data penjualan bulanan");
+    throw new Error(msg || "Gagal memuat data penjualan bulanan");
+  }
+
+  return parseJsonSafe(res);
+}

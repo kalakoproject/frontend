@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { getDashboardSummary } from "@/lib/api";
 import { useProtectedPage } from "@/lib/hooks";
+import { getTransactionHistory } from "@/lib/api";
+import Link from "next/link";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,6 +23,7 @@ export default function DashboardPage() {
   const [range, setRange] = useState<"daily" | "monthly" | "yearly">("daily");
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<any>(null);
+  const [recentTx, setRecentTx] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -32,6 +35,14 @@ export default function DashboardPage() {
       setLoading(true);
       const data = await getDashboardSummary(range);
       setSummary(data);
+      // load recent transactions (5 items)
+      try {
+        const tx = await getTransactionHistory({ limit: 5, offset: 0 });
+        // API returns { transactions, total, ... }
+        setRecentTx(tx.transactions || tx.items || []);
+      } catch (e) {
+        console.error('Failed load recent transactions', e);
+      }
     } catch (err) {
       console.error("Dashboard error:", err);
     } finally {
@@ -146,52 +157,56 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Chart Box */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500 hover:shadow-xl transition-shadow">
-          <h3 className="text-lg font-bold mb-4 text-slate-900 flex items-center gap-2">
-            📈 Grafik Pemasukan
-          </h3>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-slate-500 font-medium">⏳ Memuat data grafik...</p>
-            </div>
-          ) : (
-            <Bar data={chartData} options={{
-              responsive: true,
-              maintainAspectRatio: true,
-              plugins: {
-                legend: {
-                  display: true,
-                  labels: {
-                    font: { size: 12, weight: 'bold' },
-                    padding: 15,
-                    color: '#334155'
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    color: '#64748b',
-                    font: { size: 11 }
-                  },
-                  grid: {
-                    color: '#e2e8f0'
+        {/* Chart + Recent Transactions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500 hover:shadow-xl transition-shadow">
+            <h3 className="text-lg font-bold mb-4 text-slate-900 flex items-center gap-2">📈 Grafik Pemasukan</h3>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <p className="text-slate-500 font-medium">⏳ Memuat data grafik...</p>
+              </div>
+            ) : (
+              <Bar data={chartData} options={{
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: {
+                    display: true,
+                    labels: { font: { size: 12, weight: 'bold' }, padding: 15, color: '#334155' }
                   }
                 },
-                x: {
-                  ticks: {
-                    color: '#64748b',
-                    font: { size: 11 }
-                  },
-                  grid: {
-                    display: false
-                  }
+                scales: {
+                  y: { beginAtZero: true, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+                  x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
                 }
-              }
-            }} />
-          )}
+              }} />
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-4 border-t-4 border-amber-500 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-slate-900">🧾 Riwayat Transaksi Terbaru</h4>
+              <Link href="/transaksi/histori" className="text-xs text-blue-600 font-semibold hover:underline">View all</Link>
+            </div>
+
+            <div className="space-y-2">
+              {recentTx.length === 0 ? (
+                <p className="text-xs text-slate-500">Belum ada transaksi</p>
+              ) : (
+                recentTx.map((t: any) => (
+                  <div key={t.id} className="p-2 rounded-md border border-slate-100 hover:bg-slate-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">#{t.id} — Rp {Number(t.total_amount).toLocaleString('id-ID')}</div>
+                        <div className="text-xs text-slate-500">{t.item_count} item • {new Date(t.created_at).toLocaleString()}</div>
+                      </div>
+                      <div className="text-xs text-slate-600">{t.cashier_name || '—'}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </ClientShell>
