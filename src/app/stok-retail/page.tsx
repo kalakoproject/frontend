@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
 import {
@@ -14,31 +14,57 @@ import {
 import CategoryFormModal from "@/components/categoryForm";
 
 /* ============================================================
- * MAIN PAGE
+ * KONSTANTA
+ * ============================================================ */
+
+const PER_PAGE = 10;
+
+/* ============================================================
+ * HALAMAN UTAMA
  * ============================================================ */
 
 export default function RetailStockPage() {
   const { isReady, user } = useProtectedPage();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
-  const [storePhoto, setStorePhoto] = useState<string | null>(null);
-  const [storeName, setStoreName] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "banyak" | "sedikit" | "habis">("all");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [forceVisibleIds, setForceVisibleIds] = useState<number[]>([]);
+  const forceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+  function forceShowProduct(id: number, ms = 15000) {
+    const nid = Number(id);
+    setForceVisibleIds((prev) => (prev.includes(nid) ? prev : [...prev, nid]));
+    // clear any previous timer
+    if (forceTimers.current[nid]) clearTimeout(forceTimers.current[nid]);
+    forceTimers.current[nid] = setTimeout(() => {
+      setForceVisibleIds((prev) => prev.filter((x) => x !== nid));
+      delete forceTimers.current[nid];
+    }, ms);
+  }
+
+  // cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(forceTimers.current).forEach((t) => clearTimeout(t));
+      forceTimers.current = {};
+    };
+  }, []);
 
   async function loadData() {
     try {
       const [prod, cats] = await Promise.all([
-        getRetailProducts({ search, categoryId }),
+        getRetailProducts({}), // filter dilakukan di front-end
         getRetailCategories(),
       ]);
 
-      // backend kirim { items, total, ... }
-      setProducts(prod.items || []);
+      setProducts(prod.items || prod || []);
       setCategories(cats || []);
     } catch (err) {
       console.error("LOAD ERROR:", err);
@@ -47,14 +73,51 @@ export default function RetailStockPage() {
 
   useEffect(() => {
     if (!isReady || !user) return;
-    // Load client info with store photo
-    const clientInfo = user.client || {};
-    setStoreName(clientInfo.name || "");
-    setStorePhoto(clientInfo.store_photo_url || null);
     loadData();
-  }, [search, categoryId, isReady, user]);
+  }, [isReady, user]);
 
-  // Tampilkan loading saat check auth
+  // fungsi bantu status stok (banyak/sedikit/habis)
+  function getStockStatus(stock: number): "banyak" | "sedikit" | "habis" {
+    if (stock === 0) return "habis";
+    if (stock < 10) return "sedikit";
+    return "banyak";
+  }
+
+  // filter kategori & status stok
+  const filteredProducts = products.filter((p) => {
+    // Determine product category id (support: p.category?.id, p.category_id, p.category_name)
+    let pid: number | undefined = undefined;
+    if (p?.category?.id !== undefined) {
+      pid = Number(p.category.id);
+    } else if (p?.category_id !== undefined) {
+      pid = Number(p.category_id);
+    } else if (p?.category_name) {
+      // try to find category id by name (case-insensitive)
+      const name = String(p.category_name).trim().toLowerCase();
+      const c = categories.find((c) => String(c.name).trim().toLowerCase() === name);
+      pid = c ? Number(c.id) : undefined;
+    }
+
+    const matchCategory = categoryId !== undefined ? pid === categoryId : true;
+
+    const status = getStockStatus(Number(p.stock || 0));
+    const matchStatus = statusFilter === "all" ? true : status === statusFilter;
+    const matchForced = forceVisibleIds.includes(Number(p.id));
+
+    return matchCategory && matchStatus || matchForced;
+  });
+
+  // pagination
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PER_PAGE));
+  const startIndex = (currentPage - 1) * PER_PAGE;
+  const currentItems = filteredProducts.slice(startIndex, startIndex + PER_PAGE);
+
+  // kalau filter berubah, reset ke halaman 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryId, statusFilter]);
+
   if (!isReady) {
     return (
       <ClientShell title="Stok Retail">
@@ -69,117 +132,261 @@ export default function RetailStockPage() {
   }
 
   return (
-    <ClientShell title="📦 Stok Retail">
+    <ClientShell title="📦Stok Retail">
       <div className="space-y-6">
-        {/* Header & Search */}
+        {/* HEADER (judul di atas, filter + aksi di bawah) */}
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900">Kelola Stok Produk</h3>
-            <p className="text-xs sm:text-sm text-slate-500">Tambah, edit, atau hapus produk di toko Anda</p>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Status Kadaluwarsa
+            </h2>
+
+            {/* legend badge hijau & merah */}
+            <div className="mt-2 flex flex-wrap gap-2 items-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-700 text-xs px-3 py-0.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                sisa 3 Bulan
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-red-500 text-white text-sm px-4 py-1 font-medium">
+                <span className="w-2 h-2 rounded-full bg-white/80" />
+                Sisa 1 bulan kadaluarsa
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <input
-              type="text"
-              placeholder="🔍 Cari produk..."
-              className="border-2 border-slate-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1"
-              onChange={(e) => setSearch(e.target.value)}
-            />
 
-            <select
-              className="border-2 border-slate-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200"
-              onChange={(e) =>
-                setCategoryId(
-                  e.target.value ? Number(e.target.value) : undefined
-                )
-              }
-            >
-              <option value="">📂 Semua Kategori</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+          {/* Filter + Actions di bawah heading */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-row gap-3 items-center">
+            <div className="relative">
+              <select
+                className="appearance-none border border-slate-300 rounded-lg pl-4 pr-9 py-2 text-sm text-slate-700 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
+                value={categoryId !== undefined ? String(categoryId) : ""}
+                onChange={(e) =>
+                  setCategoryId(
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+              >
+                <option value="">Semua Kategori</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                ▼
+              </span>
+            </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg hover:from-blue-700 hover:to-blue-800 hover:shadow-lg transition-all shadow-md w-full sm:w-auto"
-            >
-              ➕ Tambah Produk
-            </button>
+            <div className="relative">
+              <select
+                className="appearance-none border border-slate-300 rounded-lg pl-4 pr-9 py-2 text-sm text-slate-700 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
+                value={statusFilter}
+                onChange={(e) => {
+                  // ensure status filter has allowed values only
+                  const val = e.target.value as "all" | "banyak" | "sedikit" | "habis";
+                  setStatusFilter(val);
+                }}
+              >
+                <option value="all">Semua Status</option>
+                <option value="banyak">Stok Banyak</option>
+                <option value="sedikit">Stok Sedikit</option>
+                <option value="habis">Stok Habis</option>
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                ▼
+              </span>
+            </div>
 
-            <button
-              onClick={() => setShowAddCategoryModal(true)}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold rounded-lg hover:from-purple-700 hover:to-purple-800 hover:shadow-lg transition-all shadow-md w-full sm:w-auto"
-            >
-              🏷️ Tambah Kategori
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 min-w-[160px] rounded-lg bg-slate-900 text-white text-sm hover:bg-black"
+                onClick={() => setShowAddModal(true)}
+                aria-label="Tambah Barang"
+              >
+                Tambah Barang
+              </button>
+
+              <button
+                type="button"
+                className="px-4 py-2 min-w-[160px] rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setShowAddCategoryModal(true)}
+                aria-label="Tambah Kategori"
+              >
+                Tambah Kategori
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* PRODUCT TABLE */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-blue-500 hover:shadow-xl transition-shadow">
+        {/* TABEL */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-                  <th className="text-left py-3 px-2 sm:px-4 font-bold">📦 Nama Produk</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold">📏 Satuan</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold">💵 Harga</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold">📊 Stok</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold hidden lg:table-cell">📅 Kadaluarsa</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold">🏷️ Status</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-bold">⚙️ Aksi</th>
+                <tr className="bg-slate-100 text-slate-800 border-b border-slate-200">
+                  <th className="py-3 px-4 text-left w-14 border-r border-slate-200">No</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Nama Barang</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Harga Jual</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Stok</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Satuan</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Kadaluarsa</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Kategori</th>
+                  <th className="py-3 px-4 text-left border-r border-slate-200">Status Stok</th>
+                  <th className="py-3 px-4 text-center w-10">&nbsp;</th>
                 </tr>
               </thead>
-
               <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-200 hover:bg-blue-50 transition-colors">
-                    <td className="py-3 px-2 sm:px-4 font-medium text-slate-900 text-xs sm:text-sm">{p.name}</td>
-                    <td className="text-center py-3 px-2 sm:px-4 text-slate-600 text-xs sm:text-sm">{p.unit}</td>
-                    <td className="text-center py-3 px-2 sm:px-4 font-bold text-green-600 text-xs sm:text-sm">
-                      {(Number(p.selling_price) || 0).toLocaleString('id-ID')}
-                    </td>
-                    <td className="text-center py-3 px-2 sm:px-4 font-bold text-slate-900 text-xs sm:text-sm">{Number(p.stock).toFixed(4).replace(/\.?0+$/, '')}</td>
-                    <td className="text-center py-3 px-2 sm:px-4 text-slate-600 hidden lg:table-cell text-xs sm:text-sm">
-                      {p.expiry_date
-                        ? new Date(p.expiry_date).toLocaleDateString("id-ID")
-                        : "—"}
-                    </td>
-                    <td className="text-center py-3 px-2 sm:px-4">
-                      <div className="flex gap-2 justify-center flex-wrap">
-                        <StockStatusBadge stock={p.stock} expiry={p.expiry_date} />
-                      </div>
-                    </td>
-                    <td className="text-center py-3 px-2 sm:px-4">
-                      <div className="flex gap-1 justify-center flex-wrap">
-                        <button
-                          className="px-2 py-1 text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 hover:shadow-lg transition-all"
-                          onClick={() => setEditProduct(p)}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className="px-2 py-1 text-xs font-bold bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 hover:shadow-lg transition-all"
-                          onClick={() => handleDelete(p.id, loadData)}
-                        >
-                          🗑️ Hapus
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {currentItems.map((p, idx) => {
+                  const rowNumber = startIndex + idx + 1;
+                  const status = getStockStatus(Number(p.stock || 0));
 
-                {products.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-8 text-slate-500 font-medium">
-                      📭 Tidak ada produk ditemukan
+                  const categoryName =
+                    p.category?.name ||
+                    p.category_name ||
+                    categories.find((c) => c.id === p.category_id)?.name ||
+                    "–";
+
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50 last:border-b last:border-slate-200">
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">{rowNumber}.</td>
+                      <td className="py-3 px-4 text-slate-900 border-r border-slate-200">{p.name}</td>
+                      <td className="py-3 px-4 text-slate-900 whitespace-nowrap border-r border-slate-200">Rp {(Number(p.selling_price) || 0).toLocaleString("id-ID")}</td>
+                      <td className="py-3 px-4 text-slate-900 border-r border-slate-200">{Number(p.stock).toFixed(4).replace(/\.?0+$/, "")}</td>
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">{p.unit}</td>
+                      <td className="py-3 px-4 border-r border-slate-200"><ExpiryBadge expiry={p.expiry_date} /></td>
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">{categoryName}</td>
+                      <td className="py-3 px-4 border-r border-slate-200"><StockStatusPill status={status} /></td>
+                      <td className="py-3 px-2 text-center relative">
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-slate-100"
+                          onClick={() =>
+                            setOpenMenuId(
+                              openMenuId === p.id ? null : p.id
+                            )
+                          }
+                        >
+                          <span className="text-xl leading-none text-slate-600">
+                            ⋮
+                          </span>
+                        </button>
+
+                        {openMenuId === p.id && (
+                                  <div className={`absolute right-2 ${idx >= currentItems.length - 2 ? 'bottom-full mb-1' : 'mt-1'} bg-white border border-slate-200 rounded-md shadow-lg z-50 text-sm`}>
+                            <button
+                              className="block px-4 py-2 hover:bg-slate-50 text-left w-full"
+                              onClick={() => {
+                                setEditProduct(p);
+                                setOpenMenuId(null);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="block px-4 py-2 hover:bg-slate-50 text-left w-full text-red-600"
+                              onClick={async () => {
+                                setOpenMenuId(null);
+                                await handleDelete(p.id, loadData);
+                              }}
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {totalProducts === 0 && (
+                  <tr className="border-b border-slate-200">
+                    <td
+                      colSpan={9}
+                      className="py-8 text-center text-slate-500"
+                    >
+                      Tidak ada data
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* FOOTER PAGINATION */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-white">
+            <div className="text-xs text-slate-600">
+              Showing{" "}
+              {totalProducts === 0 ? 0 : startIndex + 1} to{" "}
+              {Math.min(startIndex + PER_PAGE, totalProducts)} of{" "}
+              {totalProducts} results
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <span>Per page</span>
+                <div className="relative">
+                  <select
+                    className="appearance-none border border-slate-300 rounded-md pl-3 pr-7 py-1 text-xs text-slate-700 bg-white"
+                    value={PER_PAGE}
+                    disabled
+                  >
+                    <option value={PER_PAGE}>{PER_PAGE}</option>
+                  </select>
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">
+                    ▼
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.max(1, p - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 border border-slate-300 rounded-md disabled:opacity-40"
+                >
+                  ‹
+                </button>
+
+                <div className="flex border border-slate-300 rounded-md overflow-hidden">
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const page = i + 1;
+                    const active = page === currentPage;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 text-xs ${
+                          active
+                            ? "bg-slate-900 text-white"
+                            : "bg-white text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) =>
+                      Math.min(totalPages, p + 1)
+                    )
+                  }
+                  disabled={
+                    currentPage === totalPages || totalProducts === 0
+                  }
+                  className="px-2 py-1 border border-slate-300 rounded-md disabled:opacity-40"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -198,6 +405,7 @@ export default function RetailStockPage() {
         />
       )}
 
+      {/* MODAL TAMBAH KATEGORI */}
       {showAddCategoryModal && (
         <CategoryFormModal
           onClose={() => setShowAddCategoryModal(false)}
@@ -216,78 +424,102 @@ export default function RetailStockPage() {
           initial={editProduct}
           categories={categories}
           onClose={() => setEditProduct(null)}
-          onSubmit={async (data) => {
-            await updateRetailProduct(editProduct.id, data);
-            setEditProduct(null);
-            loadData();
+            onSubmit={async (data) => {
+            try {
+              // update on server
+              const updated = await updateRetailProduct(editProduct.id, data);
+
+              // If server returns updated object use it; otherwise merge with submitted data
+              const newProduct = updated && typeof updated === "object" ? updated : { ...editProduct, ...data };
+
+              // optimistically update local state so the edited product doesn't disappear
+              setProducts((prev) =>
+                prev.map((p) => (Number(p.id) === Number(editProduct.id) ? newProduct : p))
+              );
+
+              // force show this product for a short duration so filters don't hide it immediately
+              forceShowProduct(editProduct.id);
+
+              setEditProduct(null);
+              // also reload fresh data to ensure consistency (categories, aggregated fields)
+              loadData();
+            } catch (err) {
+              // bubble up error to modal behavior
+              throw err;
+            }
           }}
         />
       )}
+      </div>
     </ClientShell>
   );
 }
 
 /* ============================================================
- * STOCK STATUS BADGE
+ * BADGE KADALUARSA (warna mirip gambar)
  * ============================================================ */
 
-function StockStatusBadge({
-  stock,
-  expiry,
-}: {
-  stock: number;
-  expiry?: string | null;
-}) {
-  // Status Kadalauwarsa (sebelah kiri)
-  let expiryBadge = null;
-  const isExpired = expiry && new Date(expiry).getTime() < Date.now();
-  if (isExpired) {
-    expiryBadge = (
-      <span className="inline-block px-2 py-1 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
-        ❌ Kadalauwarsa
+function ExpiryBadge({ expiry }: { expiry?: string | null }) {
+  if (!expiry) {
+    return (
+      <span className="inline-flex px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">
+        –
       </span>
     );
-  } else {
-    const isExpiredSoon =
-      expiry &&
-      new Date(expiry).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
-    if (isExpiredSoon) {
-      expiryBadge = (
-        <span className="inline-block px-2 py-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
-          ⚠️ Mau Kadalauwarsa
-        </span>
-      );
-    }
   }
 
-  // Status Stok (sebelah kanan)
-  let stockBadge = null;
-  if (stock === 0) {
-    stockBadge = (
-      <span className="inline-block px-2 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
-        🚫 Stok Habis
-      </span>
-    );
-  } else if (stock < 10) {
-    stockBadge = (
-      <span className="inline-block px-2 py-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
-        📉 Stok Sedikit
-      </span>
-    );
-  } else {
-    stockBadge = (
-      <span className="inline-block px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full text-xs font-bold shadow-md whitespace-nowrap">
-        ✅ Stok Ada
+  const expTime = new Date(expiry).getTime();
+  const now = Date.now();
+  const diff = expTime - now;
+  const oneMonth = 30 * 24 * 60 * 60 * 1000;
+
+  const formatted = new Date(expiry).toLocaleDateString("id-ID");
+
+  // hijau = >1 bulan, merah = <=1 bulan / lewat
+  const isSoon = diff <= oneMonth;
+  const baseClass =
+    "inline-flex items-center justify-center min-w-[96px] px-3 py-1 rounded-full text-xs font-medium";
+
+  if (expTime < now || isSoon) {
+    return (
+      <span className={`${baseClass} bg-red-500 text-white`}>
+        {formatted}
       </span>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      {expiryBadge}
-      {stockBadge}
-    </div>
+    <span className={`${baseClass} bg-emerald-500 text-white`}>
+      {formatted}
+    </span>
   );
+}
+
+/* ============================================================
+ * PILL STATUS STOK (Stok Banyak/Sedikit/Habis)
+ * ============================================================ */
+
+function StockStatusPill({
+  status,
+}: {
+  status: "banyak" | "sedikit" | "habis";
+}) {
+  let text = "";
+  let className =
+    "inline-flex items-center justify-center min-w-[96px] px-3 py-1 rounded-full text-xs font-medium ";
+
+  if (status === "banyak") {
+    text = "Stok Banyak";
+    className += "bg-emerald-200 text-emerald-800";
+  } else if (status === "sedikit") {
+    text = "Stok Sedikit";
+    className += "bg-slate-200 text-slate-800";
+  } else {
+    text = "Stok Habis";
+    className += "bg-red-500 text-white";
+  }
+
+  return <span className={className}>{text}</span>;
 }
 
 /* ============================================================
@@ -301,7 +533,7 @@ async function handleDelete(id: number, refresh: () => void) {
 }
 
 /* ============================================================
- * PRODUCT FORM MODAL (TAMBAH / EDIT)
+ * FORM MODAL (TAMBAH / EDIT)
  * ============================================================ */
 
 function ProductFormModal({
@@ -360,30 +592,32 @@ function ProductFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-md shadow-2xl border-t-4 border-blue-600 overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-900 mb-2">📦 Nama Produk</label>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">
+              Nama Produk
+            </label>
             <input
               type="text"
-              className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+              className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-900 mb-2">💵 Harga Jual</label>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">
+              Harga Jual
+            </label>
             <input
               type="number"
-              className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+              className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.selling_price}
               onChange={(e) => update("selling_price", e.target.value)}
             />
@@ -391,9 +625,11 @@ function ProductFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-bold text-slate-900 mb-2">📏 Satuan</label>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                Satuan
+              </label>
               <select
-                className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+                className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                 value={form.unit}
                 onChange={(e) => update("unit", e.target.value)}
               >
@@ -404,11 +640,13 @@ function ProductFormModal({
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-900 mb-2">📊 Stok</label>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                Stok
+              </label>
               <input
                 type="number"
                 step={form.unit === "KG" ? "0.01" : "1"}
-                className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
+                className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                 value={form.stock}
                 onChange={(e) => update("stock", e.target.value)}
               />
@@ -416,9 +654,11 @@ function ProductFormModal({
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-900 mb-2">📂 Kategori</label>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">
+              Kategori
+            </label>
             <select
-              className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all"
+              className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.category_id}
               onChange={(e) => update("category_id", e.target.value)}
             >
@@ -432,33 +672,33 @@ function ProductFormModal({
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-900 mb-2">📅 Tanggal Kadaluarsa</label>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">
+              Tanggal Kadaluarsa
+            </label>
             <input
               type="date"
-              className="border-2 border-slate-300 w-full px-3 py-2 rounded-lg text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 transition-all"
+              className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.expiry_date}
               onChange={(e) => update("expiry_date", e.target.value)}
             />
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-slate-200 px-6 py-4 bg-slate-50 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
           <button
             type="button"
-            className="px-4 py-2 text-sm font-bold border-2 border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-all"
+            className="px-4 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-white"
             onClick={onClose}
           >
-            ❌ Batal
+            Batal
           </button>
-
           <button
             type="button"
-            className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 hover:shadow-lg transition-all disabled:from-slate-400 disabled:to-slate-500"
-            onClick={handleSave}
+            className="px-4 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60"
             disabled={saving}
+            onClick={handleSave}
           >
-            {saving ? "⏳ Menyimpan..." : "💾 Simpan"}
+            {saving ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
       </div>
