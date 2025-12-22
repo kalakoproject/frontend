@@ -51,8 +51,8 @@ export default function LaporanPage() {
                         {
                             label: "Penjualan (Rp)",
                             data: data.map((d: any) => d.total),
-                            backgroundColor: data.map((_, idx) => colors[idx % 2]),
-                            borderColor: data.map((_, idx) => borderColors[idx % 2]),
+                            backgroundColor: data.map((_: any, idx: number) => colors[idx % 2]),
+                            borderColor: data.map((_: any, idx: number) => borderColors[idx % 2]),
                             borderWidth: 1,
                         },
                     ],

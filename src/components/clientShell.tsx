@@ -17,6 +17,8 @@ export default function ClientShell({
 
   const [storeName, setStoreName] = useState("");
   const [storePhoto, setStorePhoto] = useState<string | null>(null);
+  // when true the sidebar is collapsed to a narrow bar showing only the hamburger
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const host = window.location.hostname.split(".")[0];
@@ -65,29 +67,57 @@ export default function ClientShell({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col md:flex-row">
       {/* SIDEBAR */}
-      <aside className="w-full md:w-64 bg-white shadow flex flex-col p-4 md:fixed md:left-0 md:top-0 md:h-screen md:overflow-y-auto">
-        {/* Store Photo */}
-        <div className="mb-4 flex items-center gap-3">
-          <Image
-            src={storePhoto || "/kalako_logo.png"}
-            alt={storeName}
-            width={100}
-            height={100}
-            className="rounded-md object-cover shadow-md"
-            unoptimized
-          />
-        </div>
+      <aside className={`relative ${sidebarCollapsed ? 'w-16' : 'w-full md:w-64'} bg-white shadow flex flex-col p-4 md:fixed md:left-0 md:top-0 md:h-screen md:overflow-y-auto transition-all`}>
+        {/* hamburger toggle (top center) - shown only when collapsed */}
+        {sidebarCollapsed && (
+          <div className="absolute left-0 right-0 top-3 flex justify-center z-10">
+            <button
+              aria-label="Open sidebar"
+              className="p-2 rounded-md bg-white shadow"
+              onClick={() => setSidebarCollapsed(false)}
+            >
+              <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
+              <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
+              <span className="block w-6 h-[2px] bg-slate-800" />
+            </button>
+          </div>
+        )}
 
-        <div className="mb-4 text-[#181616]">
-          <h1 className="text-2xl font-bold capitalize tracking-tight">
-            {storeName}
-          </h1>
-        </div>
+        {/* full content (hidden when collapsed) */}
+        <div className={sidebarCollapsed ? "hidden" : ""}>
+          {/* close button (top-right) visible only when expanded */}
+          <div className="absolute right-3 top-3">
+            <button
+              aria-label="Tutup sidebar"
+              className="p-2 rounded-md"
+              onClick={() => setSidebarCollapsed(true)}
+            >
+              ✕
+            </button>
+          </div>
+          {/* Store Photo */}
+          <div className="mb-4 flex items-center gap-3">
+            <Image
+              src={storePhoto || "/kalako_logo.png"}
+              alt={storeName}
+              width={100}
+              height={100}
+              className="rounded-md object-cover shadow-md"
+              unoptimized
+            />
+          </div>
 
-        <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-          Main Menu
-        </p>
-        <nav className="flex flex-col gap-3 text-sm flex-1">
+          <div className="mb-2 text-[#181616]">
+            <h1 className="text-2xl font-bold capitalize tracking-tight">
+              {storeName}
+            </h1>
+          </div>
+
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+            Main Menu
+          </p>
+
+          <nav className="flex flex-col gap-2 text-sm flex-1">
           <Link
             href="/dashboard"
             className={`px-4 py-3 rounded-lg text-[#181616] font-medium transition-all duration-200 flex items-center gap-2 ${
@@ -171,22 +201,25 @@ export default function ClientShell({
             />
             <span className="ml-2">Laporan Keuangan</span>
           </Link>
-        </nav>
+          </nav>
 
-        <div className="mt-4 pt-4 border-t border-slate-200">
-          <div className="mt-2">
-            <button
-              onClick={handleLogout}
-              className="w-full px-4 py-3 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all duration-200"
-            >
-              🚪 Logout
-            </button>
+          <div className="mt-15 pt-6 border-t border-slate-200 mb-8">
+            <div className="mt-1">
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all duration-200"
+              >
+                🚪 Logout
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* collapsed state handled by the top hamburger toggle */}
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 md:ml-64">
+      <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
         <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-slate-900">
           {title}
         </h2>
