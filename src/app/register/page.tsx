@@ -103,7 +103,7 @@ export default function RegisterPage() {
         </div>
 
         {/* RIGHT PANEL: Buat akun toko - FULL PANEL (bukan card) */}
-        <div className="bg-[#FBFBFB] px-4 sm:px-8 lg:px-12 py-8 lg:py-10 lg:h-screen overflow-y-auto flex items-start justify-center">
+        <div className="bg-white px-4 sm:px-8 lg:px-12 py-8 lg:py-10 lg:h-screen overflow-y-auto flex items-start justify-center">
           <div className="w-full max-w-xl lg:max-w-2xl">
             {/* Header sederhana, tanpa gradient biru */}
             <header className="mb-6 border-b border-slate-200 pb-4">
@@ -330,7 +330,7 @@ export default function RegisterPage() {
                 Sudah punya akun?{" "}
                 <a
                   href="http://kalako.local:3000/login"
-                  className="font-semibold text-slate-900 hover:underline"
+                  className="font-semibold text-sm text-blue-700 hover:underline"
                 >
                   Masuk di sini
                 </a>

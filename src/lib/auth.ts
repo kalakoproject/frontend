@@ -10,15 +10,47 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem("token", token);
+  
   // Set ke cookie juga untuk middleware
-  document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
+  // Cookie harus share ke semua subdomain .kalako.local
+  const hostname = window.location.hostname;
+  
+  // Tentukan domain untuk cookie
+  let cookieDomain = "";
+  if (hostname.includes("kalako.local")) {
+    // Set domain ke .kalako.local agar accessible di semua subdomain
+    // kalako.local, toko-maju.kalako.local, dll
+    cookieDomain = ".kalako.local";
+  } else if (hostname === "localhost" || hostname.startsWith("localhost:")) {
+    // Untuk localhost, jangan set domain (same-origin only)
+    cookieDomain = "";
+  }
+  
+  const expiresDate = new Date();
+  expiresDate.setTime(expiresDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 hari
+  
+  const domainPart = cookieDomain ? `; domain=${cookieDomain}` : "";
+  const cookieString = `token=${token}; path=/${domainPart}; expires=${expiresDate.toUTCString()}`;
+  document.cookie = cookieString;
+  
+  console.log("[AUTH] Token saved to localStorage and cookie");
+  console.log("[AUTH] Cookie domain:", cookieDomain || "none (same-origin)");
 }
 
 export function removeToken(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem("token");
-  // Clear cookie
-  document.cookie = "token=; path=/; max-age=0";
+  
+  // Clear cookie dengan domain yang sama
+  const hostname = window.location.hostname;
+  let cookieDomain = "";
+  
+  if (hostname.includes("kalako.local")) {
+    cookieDomain = ".kalako.local";
+  }
+  
+  const domainPart = cookieDomain ? `; domain=${cookieDomain}` : "";
+  document.cookie = `token=; path=/${domainPart}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
 }
 
 export function isAuthenticated(): boolean {

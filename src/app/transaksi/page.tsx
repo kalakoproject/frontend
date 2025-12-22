@@ -94,39 +94,90 @@ export default function TransaksiPage() {
   return (
     <ClientShell title="💳 Transaksi Kasir">
       <div className="space-y-6">
-        {/* SEARCH BAR */}
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5 border-t-4 border-amber-500">
-          <label className="block text-xs sm:text-sm font-bold text-slate-900 mb-3">
+        {/* SEARCH BAR (minimal, non-card) */}
+        <div className="space-y-3">
+          {/* <label className="block text-sm font-semibold text-slate-900">
             🔍 Cari Produk
-          </label>
-          <input
-            type="text"
-            className="border-2 border-slate-300 w-full px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
-            placeholder="Ketik nama produk untuk menambahkan ke keranjang..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          </label> */}
 
-          {/* SEARCH RESULTS */}
+          <div className="relative">
+            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="opacity-90"
+              >
+                <path
+                  d="M21 21l-4.35-4.35"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+
+            <input
+              type="text"
+              className="w-full pl-10 pr-12 py-3 rounded-full text-sm bg-white border border-slate-200 shadow-sm focus:shadow-md focus:outline-none focus:border-amber-400 transition-all"
+              placeholder="Ketik nama produk untuk menambahkan ke keranjang..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 bg-white hover:bg-slate-100 rounded-full p-1.5 shadow-sm"
+                aria-label="clear"
+                title="Bersihkan"
+              >
+                ✖
+              </button>
+            )}
+          </div>
+
+          {/* SEARCH RESULTS (card) */}
           {searchResults.length > 0 && (
             <div className="mt-3 border border-slate-200 rounded-xl bg-white shadow-sm max-h-48 overflow-y-auto">
-              {searchResults.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => addItem(p)}
-                  className="px-3 py-4 sm:px-6 cursor-pointer text-sm sm:text-base border-b border-slate-200 last:border-b-0 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-slate-900">{p.name}</span>
-                    <span className="text-green-600 font-bold">
-                      Rp {Number(p.selling_price).toLocaleString("id-ID")}
+              {searchResults.map((p) => {
+                const numericStock = Number(p.stock);
+                const stockDisplay = Number.isNaN(numericStock)
+                  ? p.stock
+                  : numericStock.toString();
+
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => addItem(p)}
+                    className="px-3 py-3 sm:px-4 cursor-pointer text-sm sm:text-base border-b border-slate-200 last:border-b-0 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-slate-900 truncate">
+                        {p.name}
+                      </span>
+                      <span className="text-green-600 font-bold">
+                        Rp {Number(p.selling_price).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <span className="text-sm text-slate-500">
+                      Stok: {stockDisplay} {p.unit}
                     </span>
                   </div>
-                  <span className="text-sm text-slate-500">
-                    Stok: {p.stock} {p.unit}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -134,30 +185,42 @@ export default function TransaksiPage() {
         {/* ITEMS TABLE */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm sm:text-base">
+            <table className="w-full text-sm">
+              <colgroup>
+                <col style={{ width: 56 }} />
+                <col />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 96 }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 140 }} />
+                <col style={{ width: 140 }} />
+                <col style={{ width: 72 }} />
+              </colgroup>
+
               <thead>
                 <tr className="bg-slate-100 text-slate-800 border-b border-slate-200">
-                  <th className="text-left py-4 px-3 sm:px-6 font-semibold text-sm first:rounded-tl-xl w-12 border-r border-slate-200">
+                  <th className="py-3 px-4 text-left border-r border-slate-200">
                     No
                   </th>
-                  <th className="text-left py-4 px-3 sm:px-6 font-semibold text-sm border-r border-slate-200">
+                  <th className="py-3 px-4 text-left border-r border-slate-200">
                     Nama Produk
                   </th>
-                  <th className="text-center py-4 px-3 sm:px-6 font-semibold text-sm w-24 border-r border-slate-200">
+                  <th className="py-3 px-14 text-left border-r border-slate-200">
                     Qty
                   </th>
-                  <th className="text-center py-4 px-3 sm:px-6 font-semibold text-sm w-28 border-r border-slate-200">
-                    % Diskon
+                  <th className="py-3 px-4 text-left border-r border-slate-200">
+                    Diskon %
                   </th>
-                  <th className="text-center py-4 px-3 sm:px-6 font-semibold text-sm border-r border-slate-200">
+                  <th className="py-3 pr-6 pl-3 text-right border-r border-slate-200 whitespace-nowrap">
                     Harga Satuan
                   </th>
-                  <th className="text-center py-4 px-3 sm:px-6 font-semibold text-sm border-r border-slate-200">
+                  <th className="py-3 pr-15 pl-7 text-left border-r border-slate-200 whitespace-nowrap">
                     Subtotal
                   </th>
-                  <th className="text-center py-4 px-3 sm:px-6 font-semibold text-sm last:rounded-tr-xl w-28 border-r border-slate-200">
+                  <th className="py-3 px-4 text-left border-r border-slate-200">
                     Aksi
                   </th>
+                  <th className="py-3 px-3 text-xs font-semibold uppercase tracking-wide last:rounded-tr-xl"></th>
                 </tr>
               </thead>
 
@@ -174,70 +237,116 @@ export default function TransaksiPage() {
                   return (
                     <tr
                       key={i}
-                      className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                      className="hover:bg-slate-50 last:border-b last:border-slate-200"
                     >
-                      <td className="py-4 px-3 sm:px-6 font-medium text-slate-900 text-sm sm:text-base">
-                        {i + 1}
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200 whitespace-nowrap">
+                        {`${i + 1}.`}
                       </td>
-                      <td className="py-4 px-3 sm:px-6 font-medium text-slate-900 text-sm sm:text-base">
+
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">
                         {it.name}
                       </td>
 
-                      <td className="text-center py-3 px-2 sm:px-4">
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">
                         <input
-                          type="number"
-                          min={0}
-                          step={it.unit === "KG" ? "0.01" : "1"}
-                          className="w-16 sm:w-20 border-2 border-slate-300 px-2 py-1 rounded-lg text-sm sm:text-base text-center focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
-                          value={it.qty}
+                          type="text"
+                          inputMode={it.unit === "KG" ? "decimal" : "numeric"}
+                          pattern={
+                            it.unit === "KG" ? "[0-9]*[.,]?[0-9]*" : "[0-9]*"
+                          }
+                          className="w-20 sm:w-24 border border-slate-200 px-2 py-1 rounded-md text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all"
+                          value={it.qty === 0 ? "" : String(it.qty)}
                           onChange={(e) => {
-                            // sanitize and prevent negative values
-                            const raw = e.target.value;
-                            // allow empty then treat as 0
-                            const num = raw === "" ? 0 : Number(raw);
+                            const raw = String(e.target.value);
+                            // allow digits and dot for decimal units
+                            const cleaned =
+                              it.unit === "KG"
+                                ? raw.replace(/[^0-9.]/g, "")
+                                : raw.replace(/\D/g, "");
+                            const num = cleaned === "" ? 0 : Number(cleaned);
                             updateQty(i, Number.isNaN(num) ? 0 : num);
                           }}
                         />
                       </td>
 
-                      <td className="text-center py-3 px-2 sm:px-4">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step={1}
-                          className="w-16 sm:w-20 border-2 border-slate-300 px-2 py-1 rounded-lg text-sm sm:text-base text-center focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
-                          value={disc}
-                          onChange={(e) =>
-                            updateDiscount(i, Number(e.target.value))
-                          }
-                        />
+                      <td className="py-3 px-4 text-slate-700 border-r border-slate-200">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className="w-16 sm:w-20 pr-8 border border-white px-2 py-1 rounded-md text-sm text-center focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-100 transition-all"
+                            value={disc === 1 ? "" : String(disc)}
+                            onChange={(e) => {
+                              const raw = String(e.target.value);
+                              const cleaned = raw.replace(/\D/g, "");
+                              const num = cleaned === "" ? 0 : Number(cleaned);
+                              updateDiscount(i, Number.isNaN(num) ? 0 : num);
+                            }}
+                          />
+
+                          <span className="absolute inset-y-0 right-2 flex items-center text-sm text-slate-700 pointer-events-none">
+                            %
+                          </span>
+                        </div>
                       </td>
 
-                      <td className="text-center py-4 px-3 sm:px-6 text-green-600 font-bold text-sm sm:text-base">
-                        Rp{" "}
-                        {Number(it.price).toLocaleString("id-ID", {
-                          notation: "compact",
-                          compactDisplay: "short",
-                        })}
+                      <td className="py-3 pr-6 pl-3 text-right text-green-600 text-base border-r border-slate-100 whitespace-nowrap">
+                        Rp {Number(it.price).toLocaleString("id-ID")}
                       </td>
 
-                      <td className="text-center py-4 px-3 sm:px-6 font-bold text-slate-900 text-sm sm:text-base">
-                        Rp{" "}
-                        {Number(lineSubtotal).toLocaleString("id-ID", {
-                          notation: "compact",
-                          compactDisplay: "short",
-                        })}
+                      <td className="py-3 pr-15 pl-7 text-right text-slate-700 text-base border-r border-slate-200 whitespace-nowrap">
+                        Rp {Number(lineSubtotal).toLocaleString("id-ID")}
                       </td>
 
-                      <td className="text-center py-3 px-2 sm:px-4">
+                      <td className="text-center py-3 px-3 border-r border-slate-100">
                         <button
-                          className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-lg transition-all font-bold"
                           onClick={() => removeItem(i)}
+                          title="Hapus item"
+                          aria-label="Hapus item"
+                          className="w-9 h-9 inline-flex items-center justify-center rounded-md bg-red-600 hover:bg-red-700 text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-300"
                         >
-                          🗑️ Hapus
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="text-white"
+                          >
+                            <path
+                              d="M3 6h18"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M10 11v6M14 11v6"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </button>
                       </td>
+
+                      <td className="py-3 px-3" />
                     </tr>
                   );
                 })}
@@ -246,7 +355,7 @@ export default function TransaksiPage() {
                   <tr>
                     <td
                       className="text-center text-slate-500 py-12 text-sm sm:text-base"
-                      colSpan={7}
+                      colSpan={8}
                     >
                       📭 Belum ada item. Gunakan pencarian di atas untuk
                       menambahkan produk.
@@ -259,7 +368,7 @@ export default function TransaksiPage() {
 
           {/* TOTAL */}
           {items.length > 0 && (
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-t-2 border-blue-200 p-4 flex flex-col sm:flex-row sm:justify-end">
+            <div className="bg-white p-4 flex flex-col sm:flex-row sm:justify-end">
               <div className="text-right w-full sm:w-auto">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">
                   Total Belanja:
@@ -347,7 +456,7 @@ function PayModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl border-t-4 border-green-600 overflow-hidden">
+      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl  overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
           <h2 className="font-bold text-lg text-white">💳 Proses Pembayaran</h2>
@@ -356,34 +465,47 @@ function PayModal({
         {/* Body */}
         <div className="p-6 space-y-4">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
-            <p className="text-sm text-slate-600 font-medium">Total Belanja:</p>
+            <p className="text-sm text-black font-medium">Total Belanja:</p>
             <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
               Rp {total.toLocaleString("id-ID")}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-900 mb-2">
-              💵 Nominal Pembayaran
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              className="border-2 border-slate-300 w-full px-4 py-3 rounded-lg text-lg font-semibold focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
-              value={paidInput}
-              onChange={(e) => {
-                const cleaned = String(e.target.value).replace(/[^0-9]/g, "");
-                setPaidInput(cleaned);
-                setPaid(cleaned ? Number(cleaned) : 0);
-              }}
-              autoFocus
-            />
-          </div>
+  <label className="block text-sm font-bold text-slate-900 mb-2">
+    💵 Nominal Pembayaran
+  </label>
+
+  <input
+    type="text"
+    inputMode="numeric"
+    className="border-2 border-slate-300 w-full px-4 py-3 rounded-lg text-lg font-semibold
+               focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+    value={paidInput}
+    onChange={(e) => {
+      // Ambil angka saja
+      const raw = e.target.value.replace(/\D/g, "");
+
+      // Simpan angka murni
+      const numericValue = raw ? Number(raw) : 0;
+      setPaid(numericValue);
+
+      // Format rupiah bertitik
+      const formatted = raw
+        ? numericValue.toLocaleString("id-ID")
+        : "";
+
+      setPaidInput(formatted);
+    }}
+    placeholder="0"
+    autoFocus
+  />
+</div>
+
 
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-slate-600 font-medium mb-1">
-              Kembalian:
+            <p className="text-sm text-black font-medium mb-1">
+              Kembalian :
             </p>
             <p
               className={`text-2xl font-bold ${

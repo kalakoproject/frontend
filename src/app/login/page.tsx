@@ -30,6 +30,10 @@ export default function LoginPage() {
       });
 
       setToken(resp.token);
+      
+      // Tunggu sebentar agar cookie sempat tersimpan
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      
       window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err.message);
@@ -152,7 +156,7 @@ export default function LoginPage() {
             <p className="text-sm text-center text-slate-600 mt-6">
               Belum punya akun?{" "}
               <a
-                href="/register"
+                href="http://kalako.local:3000/register"
                 className="font-semibold text-blue-700 hover:underline"
               >
                 Daftar Disini
