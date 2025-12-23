@@ -405,13 +405,15 @@ export async function createTransaction(payload: {
 export async function getTransactionHistory(params: {
   limit?: number;
   offset?: number;
-  search?: string;
+  startDate?: string;
+  endDate?: string;
 }) {
   const base = getApiBase();
   const query = new URLSearchParams();
   if (params.limit) query.append("limit", String(params.limit));
   if (params.offset) query.append("offset", String(params.offset));
-  if (params.search) query.append("search", params.search);
+  if (params.startDate) query.append("startDate", params.startDate);
+  if (params.endDate) query.append("endDate", params.endDate);
 
   const res = await fetch(`${base}/api/transactions?${query}`, {
     headers: { "Content-Type": "application/json", ...authHeaders() },

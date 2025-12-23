@@ -257,22 +257,22 @@ export default function LaporanPage() {
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center hover:shadow-md transition">
-              <p className="text-xs font-semibold text-slate-500 mb-3">Export</p>
-              <div className="flex items-center justify-center gap-2">
+              <p className="text-xs font-semibold text-slate-500 mb-3">Export Laporan</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                 <button
                   onClick={() => handleExport("pdf")}
-                  className="px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
                 >
-                  PDF
+                  📄 Export PDF
                 </button>
                 <button
                   onClick={() => handleExport("excel")}
-                  className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition flex items-center justify-center gap-2"
                 >
-                  Excel
+                  📊 Export Excel
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-2">Unduh laporan</p>
+              <p className="text-xs text-slate-400 mt-2">Unduh laporan periode {rangeLabel[range]}</p>
             </div>
           </div>
 

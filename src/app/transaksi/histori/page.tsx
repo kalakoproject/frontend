@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
-import { getTransactionHistory, getTransactionItems } from "@/lib/api";
+import { getTransactionHistory, getTransactionItems, getApiBase } from "@/lib/api";
 
 interface Transaction {
   id: number;
@@ -28,7 +28,15 @@ export default function HistoriTransaksiPage() {
   const { isReady } = useProtectedPage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
+  
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+  
+  const [startDate, setStartDate] = useState(getTodayDate());
+  const [endDate, setEndDate] = useState(getTodayDate());
   const [currentPage, setCurrentPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [selectedTransaction, setSelectedTransaction] = useState<number | null>(
@@ -69,7 +77,8 @@ export default function HistoriTransaksiPage() {
       const res = await getTransactionHistory({
         limit,
         offset: currentPage * limit,
-        search,
+        startDate,
+        endDate,
       });
       setTransactions(res.transactions || []);
       setTotal(res.total || 0);
@@ -82,12 +91,13 @@ export default function HistoriTransaksiPage() {
 
   useEffect(() => {
     setCurrentPage(0);
-  }, [search]);
+  }, [startDate, endDate]);
 
   useEffect(() => {
+    if (!isReady) return;
     loadTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, search]);
+  }, [currentPage, startDate, endDate, isReady]);
 
   async function handleViewDetail(transactionId: number) {
     if (selectedTransaction === transactionId) {
@@ -105,6 +115,32 @@ export default function HistoriTransaksiPage() {
       console.error("Error loading items:", err);
     } finally {
       setItemsLoading(false);
+    }
+  }
+
+  async function handleExport(format: "pdf" | "excel") {
+    try {
+      const base = getApiBase();
+      const url = `${base}/api/transactions/export?startDate=${startDate}&endDate=${endDate}&format=${format}`;
+      const token = localStorage.getItem("token");
+      
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) {
+        throw new Error("Gagal export laporan");
+      }
+      
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `laporan-${startDate}-${endDate}.${format === "pdf" ? "pdf" : "xlsx"}`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err: any) {
+      console.error("Export error:", err);
+      alert("Gagal export: " + err.message);
     }
   }
 
@@ -127,20 +163,61 @@ export default function HistoriTransaksiPage() {
   return (
     <ClientShell title="📜 Histori Transaksi">
       <div className="w-full">
-        {/* Search Bar */}
+        {/* Date Filter */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex gap-2 sm:gap-3">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Cari No. Transaksi atau Kasir..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-12 py-3 rounded-full text-sm bg-white border border-slate-200 shadow-sm focus:shadow-md focus:outline-none transition-all"
-              />
-              <span className="absolute right-3 sm:right-4 top-2.5 sm:top-3 text-amber-600">
-                🔍
-              </span>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="flex flex-col gap-3">
+              {/* Date inputs row */}
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                    📅 Dari:
+                  </span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                    📅 Sampai:
+                  </span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setStartDate(getTodayDate());
+                    setEndDate(getTodayDate());
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  🔄 Hari Ini
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleExport("pdf")}
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    📄 Export PDF
+                  </button>
+                  
+                  <button
+                    onClick={() => handleExport("excel")}
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    📊 Export Excel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
