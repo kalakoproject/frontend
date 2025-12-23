@@ -22,12 +22,58 @@ import { Bar } from "react-chartjs-2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export default function LaporanPage() {
-  const { isReady } = useProtectedPage();
-  const [range, setRange] = useState<"daily" | "monthly" | "yearly">("monthly");
-  const [rows, setRows] = useState<any[]>([]);
-  const [chartData, setChartData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+    const { isReady } = useProtectedPage();
+    const [range, setRange] = useState<"daily" | "monthly" | "yearly">("monthly");
+    const [rows, setRows] = useState<any[]>([]);
+    const [chartData, setChartData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isReady) return;
+        fetchData();
+    }, [range, isReady]);
+
+    async function fetchData() {
+        setLoading(true);
+        setError(null);
+        try {
+            const res: any = await getProductReport({ range, limit: 100 });
+            setRows(res.rows || []);
+
+            // Fetch monthly sales chart data
+            try {
+                const monthlyRes: any = await getMonthlySalesData();
+                const data = monthlyRes.chart || [];
+                
+                // Alternating colors: orange, blue
+                const colors = ["rgba(251,146,60,0.9)", "rgba(59,130,246,0.9)"];
+                const borderColors = ["rgb(251,146,60)", "rgb(59,130,246)"];
+                
+                setChartData({
+                    labels: data.map((d: any) => d.bulan),
+                    datasets: [
+                        {
+                            label: "Penjualan (Rp)",
+                            data: data.map((d: any) => d.total),
+                            backgroundColor: data.map((_: any, idx: number) => colors[idx % 2]),
+                            borderColor: data.map((_: any, idx: number) => borderColors[idx % 2]),
+                            borderWidth: 1,
+                        },
+                    ],
+                });
+            } catch (e) {
+                console.error("Failed to fetch monthly sales:", e);
+                setChartData(null);
+            }
+        } catch (e: any) {
+            console.error("Error fetching report:", e);
+            setError(e.message || "Gagal memuat laporan. Pastikan backend sudah running di port 4000.");
+            setRows([]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
   const formatIDR = (val: any) =>
     new Intl.NumberFormat("id-ID", {
