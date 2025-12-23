@@ -3,14 +3,19 @@
 import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
-import { getProductReport, getMonthlySalesData, exportProductReport, authHeaders } from "@/lib/api";
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Tooltip,
-    Legend,
+  getProductReport,
+  getMonthlySalesData,
+  exportProductReport,
+  authHeaders,
+} from "@/lib/api";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
@@ -70,173 +75,322 @@ export default function LaporanPage() {
         }
     }
 
-    function handleExport(format: "pdf" | "excel") {
-        const url = exportProductReport(range, format);
-        const headers = authHeaders();
-        fetch(url, { headers })
-            .then((r) => {
-                if (!r.ok) throw new Error("Export failed");
-                return r.blob();
-            })
-            .then((blob) => {
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = blobUrl;
-                a.download = `laporan_${range}.${format === "pdf" ? "pdf" : "xlsx"}`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(blobUrl);
-            })
-            .catch((e) => console.error(e));
+  const formatIDR = (val: any) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number(val || 0));
+
+  const rangeLabel: Record<"daily" | "monthly" | "yearly", string> = {
+    daily: "Hari Ini",
+    monthly: "Bulan Ini",
+    yearly: "Tahun Ini",
+  };
+
+  const titleTopProduk = `📋 Top Produk (${rangeLabel[range]})`;
+  const titleChart = `📊 Penjualan ${rangeLabel[range]}`;
+  const datasetLabel = `Penjualan ${rangeLabel[range]} (Rp)`;
+
+  useEffect(() => {
+    if (!isReady) return;
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, isReady]);
+
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res: any = await getProductReport({ range, limit: 100 });
+      setRows(res.rows || []);
+
+      try {
+        const monthlyRes: any = await getMonthlySalesData();
+        const data = monthlyRes.chart || [];
+
+        const colors = ["rgba(59,130,246,0.85)", "rgba(16,185,129,0.85)"];
+        const borderColors = ["rgb(59,130,246)", "rgb(16,185,129)"];
+
+        setChartData({
+          labels: data.map((d: any) => d.bulan),
+          datasets: [
+            {
+              label: datasetLabel,
+              data: data.map((d: any) => d.total),
+              backgroundColor: data.map((_: any, idx: number) => colors[idx % 2]),
+              borderColor: data.map((_: any, idx: number) => borderColors[idx % 2]),
+              borderWidth: 1,
+              borderRadius: 10,
+              barThickness: 16,
+            },
+          ],
+        });
+      } catch (e) {
+        console.error("Failed to fetch monthly sales:", e);
+        setChartData(null);
+      }
+    } catch (e: any) {
+      console.error("Error fetching report:", e);
+      setError(
+        e.message ||
+          "Gagal memuat laporan. Pastikan backend sudah running di port 4000."
+      );
+      setRows([]);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    const totalJumlah = rows.reduce((s, r) => s + (r.jumlah || 0), 0);
-    const totalPendapatan = rows.reduce((s, r) => s + (r.total_pendapatan || 0), 0);
+  function handleExport(format: "pdf" | "excel") {
+    const url = exportProductReport(range, format);
+    const headers = authHeaders();
+    fetch(url, { headers })
+      .then((r) => {
+        if (!r.ok) throw new Error("Export failed");
+        return r.blob();
+      })
+      .then((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `laporan_${range}.${format === "pdf" ? "pdf" : "xlsx"}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+      })
+      .catch((e) => console.error(e));
+  }
 
-    if (!isReady) {
-        return (
-            <ClientShell title="Laporan Penjualan">
-                <div className="flex items-center justify-center h-48">Memverifikasi akses...</div>
-            </ClientShell>
-        );
-    }
+  const totalJumlah = rows.reduce((s, r) => s + (r.jumlah || 0), 0);
+  const totalPendapatan = rows.reduce(
+    (s, r) => s + (r.total_pendapatan || 0),
+    0
+  );
 
-    if (error) {
-        return (
-            <ClientShell title="🧾 Laporan Penjualan">
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    <p className="font-bold">⚠️ Terjadi Error</p>
-                    <p>{error}</p>
-                    <button onClick={() => fetchData()} className="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Coba Lagi</button>
-                </div>
-            </ClientShell>
-        );
-    }
-
+  if (!isReady) {
     return (
-        <ClientShell title="🧾 Laporan Penjualan">
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setRange("daily")}
-                            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${range === "daily"
-                                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
-                                : "bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400"
-                                }`}
-                        >
-                            📅 Harian
-                        </button>
-                        <button
-                            onClick={() => setRange("monthly")}
-                            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${range === "monthly"
-                                ? "bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg"
-                                : "bg-white text-slate-700 border-2 border-slate-200 hover:border-green-400"
-                                }`}
-                        >
-                            📆 Bulanan
-                        </button>
-                        <button
-                            onClick={() => setRange("yearly")}
-                            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${range === "yearly"
-                                ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg"
-                                : "bg-white text-slate-700 border-2 border-slate-200 hover:border-purple-400"
-                                }`}
-                        >
-                            📊 Tahunan
-                        </button>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br bg-white rounded-xl shadow-lg p-6 text-black text-center hover:shadow-xl transition-all">
-                        <p className="text-sm font-medium opacity-90">Total Jumlah</p>
-                        <p className="text-2xl font-bold mt-3">{totalJumlah}</p>
-                    </div>
-
-                    <div className="bg-gradient-to-br bg-white rounded-xl shadow-lg p-6 text-black text-center hover:shadow-xl transition-all">
-                        <p className="text-sm font-medium opacity-90">Total Pendapatan</p>
-                        <p className="text-2xl font-bold mt-3">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalPendapatan)}</p>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2 text-center text-black">
-                        <div className="bg-gradient-to-br bg-white rounded-xl shadow-lg p-6 text-black text-center hover:shadow-xl transition-all">
-                            <p className="text-sm font-medium">Export Excel/PDF</p>
-                            <button onClick={() => handleExport("pdf")} className="px-1 mx-1 py-2 rounded-lg bg-red-500 text-white font-normal hover:bg-red-600 transition-all">Export to PDF</button>
-                            <button onClick={() => handleExport("excel")} className="px-1 mx-1 py-2 rounded-lg bg-green-600 text-white font-normal hover:bg-green-700 transition-all">Export to Excel</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500 hover:shadow-xl transition-shadow">
-                        <h3 className="text-lg font-bold mb-4 text-slate-900 flex items-center gap-2">📋 Top Produk</h3>
-
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="text-left border-b">
-                                        <th className="py-2 w-12">No</th>
-                                        <th className="py-2">Nama Produk</th>
-                                        <th className="py-2 w-28">Jumlah</th>
-                                        <th className="py-2 w-36">Total Pendapatan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loading ? (
-                                        <tr><td colSpan={4} className="py-6 text-center">Memuat...</td></tr>
-                                    ) : rows.length === 0 ? (
-                                        <tr><td colSpan={4} className="py-6 text-center">Tidak ada data</td></tr>
-                                    ) : (
-                                        rows.map((r, idx) => (
-                                            <tr key={r.id} className="border-b hover:bg-slate-50">
-                                                <td className="py-3">{idx + 1}.</td>
-                                                <td className="py-3">{r.name}</td>
-                                                <td className="py-3">{r.jumlah}</td>
-                                                <td className="py-3">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(r.total_pendapatan)}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-amber-500 hover:shadow-xl transition-shadow">
-                        <h4 className="text-lg font-bold mb-6 text-slate-900">📊 Pejualan Bulanan</h4>
-                        {loading ? (
-                            <div className="flex items-center justify-center h-56">Memuat chart...</div>
-                        ) : chartData ? (
-                            <div className="h-56">
-                                <Bar
-                                    data={chartData}
-                                    options={{
-                                        indexAxis: "y" as const,
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: { legend: { display: false } },
-                                        scales: {
-                                            x: {
-                                                beginAtZero: true,
-                                                ticks: { callback: (val: any) => `Rp ${(val / 1000).toLocaleString('id-ID')}K` },
-                                            },
-                                            y: {
-                                                ticks: {
-                                                    autoSkip: false,
-                                                    maxRotation: 0,
-                                                    font: { size: 12, weight: "bold" as any },
-                                                },
-                                            },
-                                        },
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-56"><p className="text-slate-500">Tidak ada data chart</p></div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </ClientShell>
+      <ClientShell title="Laporan Penjualan">
+        <div className="flex items-center justify-center h-48 text-slate-600">
+          Memverifikasi akses...
+        </div>
+      </ClientShell>
     );
+  }
+
+  if (error) {
+    return (
+      <ClientShell title="🧾 Laporan Penjualan">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+          <p className="font-bold">⚠️ Terjadi Error</p>
+          <p className="text-sm mt-1">{error}</p>
+          <button
+            onClick={() => fetchData()}
+            className="mt-3 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-semibold"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </ClientShell>
+    );
+  }
+
+  return (
+    <ClientShell title="🧾 Laporan Penjualan">
+      {/* ✅ wrapper max width supaya desktop & mobile terasa sama */}
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
+          {/* Range Switch (auto width, centered) */}
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-xl inline-flex items-center bg-slate-200 rounded-full p-1 shadow-sm">
+              <button
+                onClick={() => setRange("daily")}
+                className={`flex-1 text-center px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 rounded-full focus:outline-none ${
+                  range === "daily"
+                    ? "bg-white text-slate-900 shadow-md"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Harian
+              </button>
+              <button
+                onClick={() => setRange("monthly")}
+                className={`flex-1 text-center px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 rounded-full focus:outline-none ${
+                  range === "monthly"
+                    ? "bg-white text-slate-900 shadow-md"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Bulanan
+              </button>
+              <button
+                onClick={() => setRange("yearly")}
+                className={`flex-1 text-center px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 rounded-full focus:outline-none ${
+                  range === "yearly"
+                    ? "bg-white text-slate-900 shadow-md"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Tahunan
+              </button>
+            </div>
+          </div>
+
+          {/* Summary Cards (tetap 1 gaya, grid hanya melebar) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500">Total Jumlah</p>
+              <p className="text-3xl font-extrabold mt-2 text-slate-900">
+                {totalJumlah}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Total item terjual</p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500">Total Pendapatan</p>
+              <p className="text-3xl font-extrabold mt-2 text-slate-900">
+                {formatIDR(totalPendapatan)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Akumulasi omzet</p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500 mb-3">Export</p>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => handleExport("pdf")}
+                  className="px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                >
+                  PDF
+                </button>
+                <button
+                  onClick={() => handleExport("excel")}
+                  className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition"
+                >
+                  Excel
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">Unduh laporan</p>
+            </div>
+          </div>
+
+          {/* Table + Chart (layout konsisten) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Table */}
+            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
+                  {titleTopProduk}
+                </h3>
+                <span className="text-xs text-slate-500">{rows.length} data</span>
+              </div>
+
+              {/* ✅ biar mobile gak aneh: kasih min width table */}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[520px] text-sm">
+                  <thead>
+                    <tr className="text-left bg-slate-50 border-y border-slate-200 text-slate-700">
+                      <th className="py-3 px-2 w-12">No</th>
+                      <th className="py-3 px-2">Nama Produk</th>
+                      <th className="py-3 px-2 w-28 text-right">Jumlah</th>
+                      <th className="py-3 px-2 w-44 text-right">Pendapatan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-500">
+                          Memuat...
+                        </td>
+                      </tr>
+                    ) : rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-500">
+                          Tidak ada data
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((r, idx) => (
+                        <tr
+                          key={r.id}
+                          className="border-b border-slate-100 hover:bg-slate-50"
+                        >
+                          <td className="py-3 px-2 text-slate-600">{idx + 1}.</td>
+                          <td className="py-3 px-2 text-slate-900 font-medium">
+                            {r.name}
+                          </td>
+                          <td className="py-3 px-2 text-right text-slate-700">
+                            {r.jumlah}
+                          </td>
+                          <td className="py-3 px-2 text-right font-semibold text-slate-900">
+                            {formatIDR(r.total_pendapatan)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition">
+              <h4 className="text-base sm:text-lg font-extrabold mb-3 text-slate-900">
+                {titleChart}
+              </h4>
+
+              {/* ✅ tinggi chart stabil di mobile & desktop */}
+              {loading ? (
+                <div className="flex items-center justify-center h-64 text-slate-500">
+                  Memuat chart...
+                </div>
+              ) : chartData ? (
+                <div className="h-64">
+                  <Bar
+                    data={chartData}
+                    options={{
+                      indexAxis: "y" as const,
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (ctx: any) =>
+                              `Rp ${Number(ctx.raw || 0).toLocaleString("id-ID")}`,
+                          },
+                        },
+                      },
+                      scales: {
+                        x: {
+                          beginAtZero: true,
+                          ticks: {
+                            callback: (val: any) =>
+                              `Rp ${Number(val).toLocaleString("id-ID")}`,
+                          },
+                        },
+                        y: {
+                          ticks: {
+                            autoSkip: false,
+                            maxRotation: 0,
+                            font: { size: 12, weight: "bold" as any },
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <p className="text-slate-500">Tidak ada data chart</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ClientShell>
+  );
 }
