@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
-import { getRetailProducts, createTransaction } from "@/lib/api";
+import { getRetailProducts, createTransaction, getClientInfo } from "@/lib/api";
 
 /* ============================================================
  * MAIN TRANSACTION PAGE
@@ -12,7 +12,8 @@ import { getRetailProducts, createTransaction } from "@/lib/api";
 export default function TransaksiPage() {
   const { isReady } = useProtectedPage();
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  type RetailProduct = { id: number; name: string; selling_price: number; unit: string; stock?: number | string };
+  const [searchResults, setSearchResults] = useState<RetailProduct[]>([]);
   const [items, setItems] = useState<
     {
       product_id: number;
@@ -26,19 +27,19 @@ export default function TransaksiPage() {
 
   const [showPayModal, setShowPayModal] = useState(false);
 
-  async function searchProducts() {
-    if (!search) return setSearchResults([]);
-
-    const res = await getRetailProducts({ search });
-    setSearchResults(res.items || []);
-  }
-
   useEffect(() => {
-    const t = setTimeout(searchProducts, 300);
+    const t = setTimeout(async () => {
+      if (!search) {
+        setSearchResults([]);
+        return;
+      }
+      const res = await getRetailProducts({ search });
+      setSearchResults(res.items || []);
+    }, 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  function addItem(p: any) {
+  function addItem(p: RetailProduct) {
     setItems((prev) => [
       ...prev,
       {
@@ -373,7 +374,7 @@ export default function TransaksiPage() {
                 <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">
                   Total Belanja:
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700 mb-3">
+                <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-700 mb-3">
                   Rp {total.toLocaleString("id-ID")}
                 </p>
                 <div className="flex gap-2 justify-center sm:justify-end">
@@ -383,14 +384,14 @@ export default function TransaksiPage() {
                         return;
                       setItems([]);
                     }}
-                    className="px-4 sm:px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm sm:text-base rounded-lg hover:from-red-600 hover:to-red-700 hover:shadow-lg transition-all shadow-md"
+                    className="px-4 sm:px-6 py-2 bg-linear-to-r from-red-500 to-red-600 text-white font-bold text-sm sm:text-base rounded-lg hover:from-red-600 hover:to-red-700 hover:shadow-lg transition-all shadow-md"
                   >
                     ❌ Batal
                   </button>
 
                   <button
                     onClick={() => setShowPayModal(true)}
-                    className="px-4 sm:px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold text-sm sm:text-base rounded-lg hover:from-green-700 hover:to-green-800 hover:shadow-lg transition-all shadow-md"
+                    className="px-4 sm:px-6 py-2 bg-linear-to-r from-green-600 to-green-700 text-white font-bold text-sm sm:text-base rounded-lg hover:from-green-700 hover:to-green-800 hover:shadow-lg transition-all shadow-md"
                   >
                     💳 Proses Pembayaran
                   </button>
@@ -435,22 +436,122 @@ function PayModal({
   const [paidInput, setPaidInput] = useState("");
   const change = paid - total;
 
+  function openReceiptPrint({
+    store,
+    trx,
+    detailItems,
+    paidAmount,
+    changeAmount,
+  }: {
+    store: { name?: string; address?: string; city?: string; district?: string; sub_district?: string; province?: string; phone?: string };
+    trx: { id: number; created_at?: string | Date; total_amount: number; paid_amount: number; change_amount: number };
+    detailItems: { name: string; unit: string; quantity: number; unit_price: number; subtotal: number }[];
+    paidAmount: number;
+    changeAmount: number;
+  }) {
+    const storeName = store.name || "Toko";
+    const addressParts = [store.address, store.sub_district, store.district, store.city, store.province].filter(Boolean);
+    const addressLine = addressParts.join(", ");
+    const created = trx.created_at ? new Date(trx.created_at) : new Date();
+    const dateStr = created.toLocaleDateString("id-ID");
+    const timeStr = created.toLocaleTimeString("id-ID");
+
+    const formatRp = (n: number) => `Rp ${Number(n || 0).toLocaleString("id-ID")}`;
+
+    let itemsHtml = "";
+    for (const it of detailItems) {
+      itemsHtml += `
+        <div style="margin:6px 0;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-weight:600;">${it.name}</span>
+            <span>${formatRp(it.subtotal)}</span>
+          </div>
+          <div style="font-size:11px;color:#444;">${it.quantity} ${it.unit} x ${formatRp(it.unit_price)}</div>
+        </div>
+      `;
+    }
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Struk Pembayaran</title>
+          <style>
+            body { font-family: Arial, sans-serif; width: 80mm; margin: 0; padding: 10px; }
+            .sep { border-top: 1px dashed #999; margin: 8px 0; }
+          </style>
+        </head>
+        <body>
+          <div style="text-align:center">
+            <div style="font-size:16px;font-weight:700;">${storeName}</div>
+            ${addressLine ? `<div style="font-size:12px;color:#444; margin-top:2px;">${addressLine}</div>` : ""}
+            ${store.phone ? `<div style="font-size:12px;color:#444;">Telp: ${store.phone}</div>` : ""}
+          </div>
+          <div class="sep"></div>
+          <div style="font-size:12px;display:flex;justify-content:space-between;">
+            <span>ID: ${trx.id}</span>
+            <span>${dateStr} ${timeStr}</span>
+          </div>
+          <div class="sep"></div>
+          ${itemsHtml}
+          <div class="sep"></div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;font-weight:700;">
+            <span>Total</span>
+            <span>${formatRp(trx.total_amount)}</span>
+          </div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;">
+            <span>Bayar</span>
+            <span>${formatRp(paidAmount)}</span>
+          </div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;color:#0a0;">
+            <span>Kembalian</span>
+            <span>${formatRp(changeAmount)}</span>
+          </div>
+          <div class="sep"></div>
+          <div style="text-align:center;font-size:12px;color:#333;">Terima kasih telah berbelanja</div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const w = window.open("", "_blank", "width=400,height=600");
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    }
+  }
+
   async function handlePay() {
     if (paid < total) return alert("❌ Nominal kurang!");
 
     try {
-      await createTransaction({
+      const resp = await createTransaction({
         items: items.map((it) => ({
           product_id: it.product_id,
           quantity: it.qty,
         })),
         paid_amount: paid,
       });
+      // resp: { transaction, items }
+      const store = await getClientInfo();
+      const trx = resp?.transaction || { id: 0, total_amount: total, paid_amount: paid, change_amount: Math.max(paid - total, 0) };
+      const detail = Array.isArray(resp?.items) ? resp.items : [];
 
-      alert("✅ Transaksi berhasil!");
+      openReceiptPrint({
+        store,
+        trx,
+        detailItems: detail,
+        paidAmount: paid,
+        changeAmount: Math.max(paid - total, 0),
+      });
+
       onSuccess();
-    } catch (err: any) {
-      alert("❌ " + (err.message || "Transaksi gagal"));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Transaksi gagal";
+      alert("❌ " + msg);
     }
   }
 
@@ -458,15 +559,15 @@ function PayModal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl  overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
+        <div className="bg-linear-to-r from-slate-900 to-slate-800 px-6 py-4">
           <h2 className="font-bold text-lg text-white">💳 Proses Pembayaran</h2>
         </div>
 
         {/* Body */}
         <div className="p-6 space-y-4">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+          <div className="bg-linear-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
             <p className="text-sm text-black font-medium">Total Belanja:</p>
-            <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
+            <p className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-green-600 to-emerald-600">
               Rp {total.toLocaleString("id-ID")}
             </p>
           </div>
@@ -511,7 +612,7 @@ function PayModal({
               className={`text-2xl font-bold ${
                 change < 0
                   ? "text-red-600"
-                  : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700"
+                  : "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-700"
               }`}
             >
               Rp {Math.max(change, 0).toLocaleString("id-ID")}
@@ -535,7 +636,7 @@ function PayModal({
           </button>
 
           <button
-            className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-bold bg-linear-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed"
             disabled={paid < total}
             onClick={handlePay}
           >

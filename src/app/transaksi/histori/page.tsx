@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
-import { getTransactionHistory, getTransactionItems, getApiBase } from "@/lib/api";
+import { getTransactionHistory, getTransactionItems, getApiBase, getClientInfo } from "@/lib/api";
 
 interface Transaction {
   id: number;
@@ -50,10 +50,10 @@ export default function HistoriTransaksiPage() {
   // =========================
   // Helpers
   // =========================
-  const formatRupiah = (val: any) =>
+  const formatRupiah = (val: number | string) =>
     `Rp ${Number(val || 0).toLocaleString("id-ID")}`;
 
-  const formatQty = (qty: any, unit: string) => {
+  const formatQty = (qty: number | string, unit: string) => {
     const n = Number(qty || 0);
     const u = (unit || "").toLowerCase().trim();
 
@@ -71,6 +71,90 @@ export default function HistoriTransaksiPage() {
     });
   };
 
+  function openReceiptPrint({
+    store,
+    tx,
+    detailItems,
+  }: {
+    store: { name?: string; address?: string; city?: string; district?: string; sub_district?: string; province?: string; phone?: string };
+    tx: Transaction;
+    detailItems: { name: string; unit: string; quantity: number; unit_price: number; subtotal: number }[];
+  }) {
+    const storeName = store.name || "Toko";
+    const addressParts = [store.address, store.sub_district, store.district, store.city, store.province].filter(Boolean);
+    const addressLine = addressParts.join(", ");
+    const created = tx.created_at ? new Date(tx.created_at) : new Date();
+    const dateStr = created.toLocaleDateString("id-ID");
+    const timeStr = created.toLocaleTimeString("id-ID");
+
+    const formatRp = (n: number) => `Rp ${Number(n || 0).toLocaleString("id-ID")}`;
+
+    let itemsHtml = "";
+    for (const it of detailItems) {
+      itemsHtml += `
+        <div style="margin:6px 0;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-weight:600;">${it.name}</span>
+            <span>${formatRp(it.subtotal)}</span>
+          </div>
+          <div style="font-size:11px;color:#444;">${it.quantity} ${it.unit} x ${formatRp(it.unit_price)}</div>
+        </div>
+      `;
+    }
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Struk Pembayaran</title>
+          <style>
+            body { font-family: Arial, sans-serif; width: 80mm; margin: 0; padding: 10px; }
+            .sep { border-top: 1px dashed #999; margin: 8px 0; }
+          </style>
+        </head>
+        <body>
+          <div style="text-align:center">
+            <div style="font-size:16px;font-weight:700;">${storeName}</div>
+            ${addressLine ? `<div style=\"font-size:12px;color:#444; margin-top:2px;\">${addressLine}</div>` : ""}
+            ${store.phone ? `<div style=\"font-size:12px;color:#444;\">Telp: ${store.phone}</div>` : ""}
+          </div>
+          <div class="sep"></div>
+          <div style="font-size:12px;display:flex;justify-content:space-between;">
+            <span>ID: ${tx.id}</span>
+            <span>${dateStr} ${timeStr}</span>
+          </div>
+          <div class="sep"></div>
+          ${itemsHtml}
+          <div class="sep"></div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;font-weight:700;">
+            <span>Total</span>
+            <span>${formatRp(tx.total_amount)}</span>
+          </div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;">
+            <span>Bayar</span>
+            <span>${formatRp(tx.paid_amount)}</span>
+          </div>
+          <div style="font-size:13px;display:flex;justify-content:space-between;color:#0a0;">
+            <span>Kembalian</span>
+            <span>${formatRp(tx.change_amount)}</span>
+          </div>
+          <div class="sep"></div>
+          <div style="text-align:center;font-size:12px;color:#333;">Terima kasih telah berbelanja</div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const w = window.open("", "_blank", "width=400,height=600");
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    }
+  }
+
   async function loadTransactions() {
     setLoading(true);
     try {
@@ -82,7 +166,7 @@ export default function HistoriTransaksiPage() {
       });
       setTransactions(res.transactions || []);
       setTotal(res.total || 0);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading transactions:", err);
     } finally {
       setLoading(false);
@@ -111,10 +195,29 @@ export default function HistoriTransaksiPage() {
     try {
       const res = await getTransactionItems(transactionId);
       setSelectedItems(res.items || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading items:", err);
     } finally {
       setItemsLoading(false);
+    }
+  }
+
+  async function handleViewReceipt(tx: Transaction) {
+    try {
+      const store = await getClientInfo();
+      const res = await getTransactionItems(tx.id);
+      const items: TransactionItem[] = res.items || [];
+      const detailItems = items.map((it) => ({
+        name: it.product_name,
+        unit: it.unit,
+        quantity: Number(it.quantity),
+        unit_price: Number(it.unit_price),
+        subtotal: Number(it.subtotal),
+      }));
+      openReceiptPrint({ store, tx, detailItems });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Gagal membuka struk";
+      alert("❌ " + msg);
     }
   }
 
@@ -138,9 +241,10 @@ export default function HistoriTransaksiPage() {
       link.download = `laporan-${startDate}-${endDate}.${format === "pdf" ? "pdf" : "xlsx"}`;
       link.click();
       URL.revokeObjectURL(link.href);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Export error:", err);
-      alert("Gagal export: " + err.message);
+      const msg = err instanceof Error ? err.message : "Gagal export laporan";
+      alert("Gagal export: " + msg);
     }
   }
 
@@ -272,9 +376,21 @@ export default function HistoriTransaksiPage() {
                       {new Date(tx.created_at).toLocaleString("id-ID")}
                     </div>
                     <div className="py-3 px-4 text-center">
-                      <button className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200">
-                        {selectedTransaction === tx.id ? "▼" : "▶"}
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleViewDetail(tx.id); }}
+                          className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200"
+                        >
+                          {selectedTransaction === tx.id ? "▼" : "▶"}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleViewReceipt(tx); }}
+                          className="px-2 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700"
+                          title="Lihat Struk"
+                        >
+                          🧾 Struk
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -299,7 +415,7 @@ export default function HistoriTransaksiPage() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-3 text-sm">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
+                        <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
                           <div className="text-xs text-blue-600 font-bold">
                             Total
                           </div>
@@ -307,7 +423,7 @@ export default function HistoriTransaksiPage() {
                             {formatRupiah(tx.total_amount)}
                           </div>
                         </div>
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2 border border-green-200">
+                        <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg p-2 border border-green-200">
                           <div className="text-xs text-green-600 font-bold">
                             Items
                           </div>
@@ -315,13 +431,21 @@ export default function HistoriTransaksiPage() {
                             {tx.item_count}
                           </div>
                         </div>
-                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-2 border border-amber-200">
+                        <div className="bg-linear-to-br from-amber-50 to-amber-100 rounded-lg p-2 border border-amber-200">
                           <div className="text-xs text-amber-600 font-bold">
                             Waktu
                           </div>
                           <div className="font-bold text-xs text-slate-900">
                             {new Date(tx.created_at).toLocaleDateString("id-ID")}
                           </div>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleViewReceipt(tx); }}
+                            className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700"
+                          >
+                            🧾 Lihat Struk
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -350,7 +474,7 @@ export default function HistoriTransaksiPage() {
                               className="bg-white rounded-lg p-2 sm:p-3 grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-xs sm:text-sm border border-slate-200"
                             >
                               {/* Nama Barang */}
-                              <div className="text-slate-800 font-semibold col-span-2 sm:col-span-1 break-words">
+                              <div className="text-slate-800 font-semibold col-span-2 sm:col-span-1 wrap-break-word">
                                 {item.product_name}
                               </div>
 
@@ -429,7 +553,7 @@ export default function HistoriTransaksiPage() {
               <button
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all w-full sm:w-auto"
+                className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all w-full sm:w-auto"
               >
                 ◀ Sebelumnya
               </button>
@@ -451,7 +575,7 @@ export default function HistoriTransaksiPage() {
                       onClick={() => setCurrentPage(i)}
                       className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-bold text-sm transition-all ${
                         currentPage === i
-                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                          ? "bg-linear-to-r from-blue-600 to-blue-700 text-white"
                           : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                       }`}
                     >
@@ -466,7 +590,7 @@ export default function HistoriTransaksiPage() {
                   setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
                 }
                 disabled={currentPage === totalPages - 1}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all w-full sm:w-auto"
+                className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all w-full sm:w-auto"
               >
                 Selanjutnya ▶
               </button>
