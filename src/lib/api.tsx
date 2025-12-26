@@ -142,6 +142,18 @@ export async function sendOtpEmail(email: string) {
   return true;
 }
 
+/** Cek ketersediaan email */
+export async function checkEmailAvailability(email: string): Promise<{ available: boolean }> {
+  const base = getApiBase();
+  const q = new URLSearchParams({ email });
+  const res = await fetch(`${base}/api/auth/check-email?${q.toString()}`);
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Gagal memeriksa email');
+    throw new Error(msg || 'Gagal memeriksa email');
+  }
+  return parseJsonSafe(res);
+}
+
 /** Signup client dengan OTP */
 export async function signupClientWithOtp(payload: {
   store_name: string;

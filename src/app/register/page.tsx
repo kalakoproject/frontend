@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { sendOtpEmail, signupClientWithOtp } from "@/lib/api";
+import { FormEvent, useEffect, useState } from "react";
+import { sendOtpEmail, signupClientWithOtp, checkEmailAvailability } from "@/lib/api";
 import ImageUploader from "@/components/imageUploader";
 
 export default function RegisterPage() {
@@ -12,6 +12,33 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [storePhotoUrl, setStorePhotoUrl] = useState("");
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Debounced email availability check on change
+  useEffect(() => {
+    setEmailError(null);
+    setEmailAvailable(null);
+    if (!email) return;
+
+    const handler = setTimeout(async () => {
+      try {
+        setCheckingEmail(true);
+        const { available } = await checkEmailAvailability(email);
+        setEmailAvailable(available);
+        setEmailError(available ? null : "Email sudah dipakai");
+      } catch (e: any) {
+        // fallback: don't block UI
+        setEmailAvailable(null);
+        setEmailError(null);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [email]);
 
   async function handleSendOtp() {
     setError(null);
@@ -19,6 +46,11 @@ export default function RegisterPage() {
 
     if (!email) {
       setError("Email wajib diisi");
+      return;
+    }
+
+    if (emailAvailable === false) {
+      setError("Email sudah digunakan");
       return;
     }
 
@@ -175,7 +207,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={!email || sendingOtp}
+                    disabled={!email || sendingOtp || emailAvailable === false || checkingEmail}
                     className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all disabled:bg-slate-400 disabled:cursor-not-allowed"
                   >
                     {sendingOtp
@@ -185,6 +217,11 @@ export default function RegisterPage() {
                       : "Kirim OTP"}
                   </button>
                 </div>
+                {email && (checkingEmail || emailAvailable !== null) && (
+                  <p className={`text-xs mt-1 ${emailAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                    {checkingEmail ? 'Memeriksa email…' : emailAvailable ? 'Email tersedia' : 'Email sudah dipakai'}
+                  </p>
+                )}
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
@@ -206,9 +243,10 @@ export default function RegisterPage() {
                   <input
                     name="username"
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                    placeholder="username unik"
+                    placeholder="username (unik per toko)"
                     required
                   />
+                  <p className="text-xs text-slate-500 mt-1">Username boleh sama di subdomain berbeda, namun unik di toko Anda.</p>
                 </div>
               </div>
 
@@ -320,7 +358,7 @@ export default function RegisterPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || emailAvailable === false || checkingEmail}
                 className="w-full h-11 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-all disabled:bg-slate-400 disabled:cursor-not-allowed shadow-sm"
               >
                 {loading ? "Mendaftar..." : "Daftar Sekarang"}
