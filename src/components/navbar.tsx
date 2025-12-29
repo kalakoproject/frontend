@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import logoImg from '../../public/logo1.png';
 
 const Navbar: React.FC = () => {
@@ -52,18 +53,15 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex space-x-8 items-center">
             <a href="#about" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Tentang Kami</a>
             <a href="#vision" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Visi Misi</a>
-            <a href="#values" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Core Values</a>
+            <a href="#values" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Nilai & Budaya</a>
             <a href="#servis" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Fitur</a>
           </div>
 
           {/* Bagian Kanan: Login dan Button */}
           <div className="flex items-center space-x-6">
-            <a href="/login" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">
-              Login
-            </a>
-            <button className="bg-[#875A7B] hover:bg-[#9a3f73] text-white px-5 py-2 rounded-md font-medium transition-all">
+            <Link href="/register" className="bg-[#875A7B] hover:bg-[#9a3f73] text-white px-5 py-2 rounded-md font-medium transition-all">
               Register
-            </button>
+            </Link>
           </div>
 
         </div>

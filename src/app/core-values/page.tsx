@@ -33,7 +33,7 @@ const CoreValues: React.FC = () => {
           <div className="w-full lg:w-1/2 flex flex-col space-y-10">
             <div>
                <h2 className="text-3xl md:text-4xl font-bold leading-tight">
-                <span className="text-[#9a3f73]">Our</span> <span className="text-gray-900">Values</span>
+                <span className="text-[#9a3f73]">Nilai</span> <span className="text-gray-900">Perusahaan</span>
               </h2>
             </div>
 
