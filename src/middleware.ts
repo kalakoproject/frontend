@@ -24,9 +24,21 @@ export function middleware(req: NextRequest) {
 
   // ================= ROOT DOMAIN =================
   if (isRoot) {
+    // Izinkan akses hanya melalui /admin/login pada root domain
+    // Render halaman login yang ada melalui rewrite ke /login
+    if (pathname === "/admin/login") {
+      return NextResponse.rewrite(new URL("/login", req.url));
+    }
+
     if (pathname === "/register" || pathname === "/not") {
       return NextResponse.next();
     }
+
+    // Blok akses langsung ke /login pada root domain
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/not", req.url));
+    }
+
     return NextResponse.redirect(new URL("/not", req.url));
   }
 

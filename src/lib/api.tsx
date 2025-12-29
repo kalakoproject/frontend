@@ -465,8 +465,8 @@ export async function logout() {
     // Import di sini untuk avoid circular dependency
     const { removeToken } = await import("@/lib/auth");
     removeToken();
-
-    window.location.href = "/login";
+    // Gunakan replace agar tidak bisa kembali ke halaman sebelumnya
+    window.location.replace("/login");
   }
 }
 

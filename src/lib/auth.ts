@@ -44,13 +44,16 @@ export function removeToken(): void {
   // Clear cookie dengan domain yang sama
   const hostname = window.location.hostname;
   let cookieDomain = "";
-  
   if (hostname.includes("kalako.local")) {
     cookieDomain = ".kalako.local";
   }
-  
-  const domainPart = cookieDomain ? `; domain=${cookieDomain}` : "";
-  document.cookie = `token=; path=/${domainPart}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+
+  // Hapus cookie untuk kedua kemungkinan: tanpa domain dan dengan domain root
+  // (penting karena beberapa browser menyimpan cookie dengan variasi berbeda)
+  document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+  if (cookieDomain) {
+    document.cookie = `token=; path=/; domain=${cookieDomain}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+  }
 }
 
 export function isAuthenticated(): boolean {
