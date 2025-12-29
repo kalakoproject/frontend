@@ -15,7 +15,7 @@ const HeroSection: React.FC = () => {
           {/* SISI KIRI: TEXT & FORM */}
           <div className="w-full lg:w-1/2 flex flex-col space-y-6 z-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#212529] leading-tight">
-              Kalako Software {' '}
+              Kalako  {' '}
               <span className="relative inline-block">
                 Teman Pintar 
                 {/* SVG Lingkaran Merah */}

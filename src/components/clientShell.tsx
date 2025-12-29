@@ -20,6 +20,23 @@ export default function ClientShell({
   // when true the sidebar is collapsed to a narrow bar showing only the hamburger
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
+  // keep the sidebar open state across navigation so it doesn't auto-close after clicks
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("sidebarCollapsed");
+    if (stored !== null) {
+      setSidebarCollapsed(stored === "true");
+    } else {
+      // default collapsed on mobile, open on desktop
+      setSidebarCollapsed(window.innerWidth < 768);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("sidebarCollapsed", sidebarCollapsed ? "true" : "false");
+  }, [sidebarCollapsed]);
+
   useEffect(() => {
     const host = window.location.hostname.split(".")[0];
     setStoreName(host.replace("-", " "));
@@ -146,7 +163,6 @@ export default function ClientShell({
             className={`w-full px-4 py-3 rounded-lg text-[#181616] font-medium transition-all duration-200 flex items-center gap-3 ${
               isActive("/dashboard") ? "bg-[#EBEEF0]" : "hover:bg-[#EBEEF0]"
             }`}
-            onClick={() => setSidebarCollapsed(true)}
           >
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <Image
@@ -165,7 +181,6 @@ export default function ClientShell({
             className={`w-full px-4 py-3 rounded-lg text-[#181616] font-medium transition-all duration-200 flex items-center gap-3 ${
               isActive("/stok-retail") ? "bg-[#EBEEF0]" : "hover:bg-[#EBEEF0]"
             }`}
-            onClick={() => setSidebarCollapsed(true)}
           >
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <Image
@@ -186,7 +201,6 @@ export default function ClientShell({
                 ? "bg-[#EBEEF0]"
                 : "hover:bg-[#EBEEF0]"
             }`}
-            onClick={() => setSidebarCollapsed(true)}
           >
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <Image
@@ -207,7 +221,6 @@ export default function ClientShell({
                 ? "bg-[#EBEEF0]"
                 : "hover:bg-[#EBEEF0]"
             }`}
-            onClick={() => setSidebarCollapsed(true)}
           >
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <Image
@@ -226,7 +239,6 @@ export default function ClientShell({
             className={`w-full px-4 py-3 rounded-lg text-[#181616] font-medium transition-all duration-200 flex items-center gap-3 ${
               isActive("/laporan") ? "bg-[#EBEEF0]" : "hover:bg-[#EBEEF0]"
             }`}
-            onClick={() => setSidebarCollapsed(true)}
           >
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <Image
