@@ -13,7 +13,9 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
     pathname.startsWith("/assets") ||
-    pathname.startsWith("/public")
+    pathname.startsWith("/public") ||
+    pathname.startsWith("/landingpage") ||
+    pathname === "/"
   ) {
     return NextResponse.next();
   }
