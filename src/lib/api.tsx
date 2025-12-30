@@ -13,14 +13,18 @@
  *   memakai NEXT_PUBLIC_API_BASE
  */
 export function getApiBase() {
+  const override = process.env.NEXT_PUBLIC_API_BASE;
   // === CLIENT SIDE ===
   if (typeof window !== "undefined") {
+    if (override && override.trim().length > 0) {
+      return override.trim();
+    }
     const host = window.location.hostname.split(":")[0];
-    return `http://${host}:4000`;
+    return `http://${host}`;
   }
 
   // === SERVER SIDE ===
-  return process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+  return override || "http://localhost:4000";
 }
 
 /* ============================================================
@@ -32,6 +36,22 @@ export function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// Header identitas tenant untuk API global
+export function tenantHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "portorey.my.id";
+  const host = window.location.hostname.split(":")[0];
+  const hostParts = host.split(".");
+  const baseParts = BASE_DOMAIN.split(".");
+  const prefixLen = hostParts.length - baseParts.length;
+  let tenant = "";
+  if (prefixLen > 0) {
+    const prefixParts = hostParts.slice(0, prefixLen);
+    tenant = prefixParts[0] === "api" ? (prefixParts[1] || "") : prefixParts[0];
+  }
+  return tenant ? { "X-Tenant": tenant } : {};
 }
 
 /** Try to parse response as JSON, otherwise return raw text under __rawText */
@@ -61,7 +81,7 @@ async function extractErrorMessage(res: Response, fallback = "Error") {
 export async function apiGet(url: string) {
   const base = getApiBase();
   const res = await fetch(`${base}${url}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -77,7 +97,7 @@ export async function apiPost(url: string, body: any) {
   const base = getApiBase();
   const res = await fetch(`${base}${url}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(body),
   });
 
@@ -93,7 +113,7 @@ export async function apiPut(url: string, body: any) {
   const base = getApiBase();
   const res = await fetch(`${base}${url}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(body),
   });
 
@@ -109,7 +129,7 @@ export async function apiDelete(url: string) {
   const base = getApiBase();
   const res = await fetch(`${base}${url}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
   });
 
   if (!res.ok) {
@@ -130,7 +150,7 @@ export async function sendOtpEmail(email: string) {
 
   const res = await fetch(`${base}/api/auth/send-otp-email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...tenantHeader() },
     body: JSON.stringify({ email }),
   });
 
@@ -146,7 +166,9 @@ export async function sendOtpEmail(email: string) {
 export async function checkEmailAvailability(email: string): Promise<{ available: boolean }> {
   const base = getApiBase();
   const q = new URLSearchParams({ email });
-  const res = await fetch(`${base}/api/auth/check-email?${q.toString()}`);
+  const res = await fetch(`${base}/api/auth/check-email?${q.toString()}`, {
+    headers: { ...tenantHeader() },
+  });
   if (!res.ok) {
     const msg = await extractErrorMessage(res, 'Gagal memeriksa email');
     throw new Error(msg || 'Gagal memeriksa email');
@@ -175,7 +197,7 @@ export async function signupClientWithOtp(payload: {
 
   const res = await fetch(`${base}/api/auth/client/signup-with-otp`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -193,7 +215,7 @@ export async function login(payload: { username: string; password: string }) {
 
   const res = await fetch(`${base}/api/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -213,7 +235,7 @@ export async function getClientInfo() {
   const base = getApiBase();
 
   const res = await fetch(`${base}/api/dashboard/client-info`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -231,7 +253,7 @@ export async function getDashboardSummary(
   const base = getApiBase();
 
   const res = await fetch(`${base}/api/dashboard/summary?range=${range}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -265,7 +287,7 @@ export async function getRetailProducts(params: {
   if (params.status) query.set("status", params.status);
 
   const res = await fetch(`${base}/api/retail/products?${query.toString()}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -290,7 +312,7 @@ export async function addRetailProduct(payload: {
 
   const res = await fetch(`${base}/api/retail/products`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -319,7 +341,7 @@ export async function updateRetailProduct(
 
   const res = await fetch(`${base}/api/retail/products/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -338,7 +360,7 @@ export async function deleteRetailProduct(id: number) {
 
   const res = await fetch(`${base}/api/retail/products/${id}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
   });
 
   if (!res.ok)
@@ -358,7 +380,7 @@ export async function getRetailCategories() {
   const base = getApiBase();
 
   const res = await fetch(`${base}/api/retail/categories`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
   });
 
   if (!res.ok)
@@ -376,7 +398,7 @@ export async function addRetailCategory(payload: { name: string }) {
 
   const res = await fetch(`${base}/api/retail/categories`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -400,7 +422,7 @@ export async function createTransaction(payload: {
 
   const res = await fetch(`${base}/api/transactions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     body: JSON.stringify(payload),
   });
 
@@ -428,7 +450,7 @@ export async function getTransactionHistory(params: {
   if (params.endDate) query.append("endDate", params.endDate);
 
   const res = await fetch(`${base}/api/transactions?${query}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -445,7 +467,7 @@ export async function getTransactionItems(transactionId: number) {
   const base = getApiBase();
 
   const res = await fetch(`${base}/api/transactions/${transactionId}/items`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -466,7 +488,7 @@ export async function logout() {
   try {
     await fetch(`${base}/api/auth/logout`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
       credentials: "include",
     });
   } catch (e) {
@@ -498,7 +520,7 @@ export async function getProductReport(params: {
   if (params.offset) q.set("offset", String(params.offset));
 
   const res = await fetch(`${base}/api/reports/products?${q.toString()}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 
@@ -521,7 +543,7 @@ export async function getMonthlySalesData() {
   const base = getApiBase();
 
   const res = await fetch(`${base}/api/reports/monthly-sales`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     cache: "no-store",
   });
 

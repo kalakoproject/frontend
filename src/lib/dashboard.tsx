@@ -1,4 +1,5 @@
 // lib/dashboard.ts
+import { getApiBase, authHeaders, tenantHeader } from "@/lib/api";
 export type RangeType = "daily" | "monthly" | "yearly";
 
 export type DashboardSummary = {
@@ -19,21 +20,13 @@ export type RecentTransaction = {
   status: "pending" | "confirmed" | "canceled";
 };
 
-function getTenantApiBase() {
-  if (typeof window === "undefined") return "";
-  const host = window.location.hostname.split(":")[0]; // tokomaju.kalako.local
-  return `http://${host}:4000`;
-}
+// Gunakan API global melalui helper
 
 export async function fetchDashboard(range: RangeType): Promise<DashboardSummary> {
-  const base = getTenantApiBase();
-
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const base = getApiBase();
 
   const res = await fetch(`${base}/api/dashboard/summary?range=${range}`, {
-    headers: {
-      Authorization: token ? `Bearer ${token}` : "",
-    },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
   });
 
   if (!res.ok) {
@@ -46,15 +39,12 @@ export async function fetchDashboard(range: RangeType): Promise<DashboardSummary
 export async function fetchRecentTransactions(
   range: RangeType
 ): Promise<RecentTransaction[]> {
-  const base = getTenantApiBase();
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const base = getApiBase();
 
   const res = await fetch(
     `${base}/api/dashboard/recent-transactions?range=${range}`,
     {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
     }
   );
 

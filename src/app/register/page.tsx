@@ -95,7 +95,7 @@ export default function RegisterPage() {
       setSuccess("Pendaftaran berhasil, mengalihkan ke halaman login toko...");
 
       const subdomain = resp.client.subdomain;
-      window.location.href = `http://${subdomain}.kalako.local:3000/login`;
+      window.location.href = `http://${subdomain}.portorey.my.id/login`;
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -363,16 +363,6 @@ export default function RegisterPage() {
               >
                 {loading ? "Mendaftar..." : "Daftar Sekarang"}
               </button>
-
-              <p className="text-xs text-center text-slate-500 mt-4">
-                Sudah punya akun?{" "}
-                <a
-                  href="http://kalako.local:3000/login"
-                  className="font-semibold text-sm text-blue-700 hover:underline"
-                >
-                  Masuk di sini
-                </a>
-              </p>
             </form>
 
             {/* Footer teks di panel kanan */}

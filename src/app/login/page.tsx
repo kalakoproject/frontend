@@ -156,7 +156,7 @@ export default function LoginPage() {
             <p className="text-sm text-center text-slate-600 mt-6">
               Belum punya akun?{" "}
               <a
-                href="http://kalako.local:3000/register"
+                href="http://portorey.my.id/register"
                 className="font-semibold text-blue-700 hover:underline"
               >
                 Daftar Disini

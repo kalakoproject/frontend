@@ -17,10 +17,10 @@ export function setToken(token: string): void {
   
   // Tentukan domain untuk cookie
   let cookieDomain = "";
-  if (hostname.includes("kalako.local")) {
+  if (hostname.includes("portorey.my.id")) {
     // Set domain ke .kalako.local agar accessible di semua subdomain
     // kalako.local, toko-maju.kalako.local, dll
-    cookieDomain = ".kalako.local";
+    cookieDomain = ".portorey.my.id";
   } else if (hostname === "localhost" || hostname.startsWith("localhost:")) {
     // Untuk localhost, jangan set domain (same-origin only)
     cookieDomain = "";
@@ -44,8 +44,8 @@ export function removeToken(): void {
   // Clear cookie dengan domain yang sama
   const hostname = window.location.hostname;
   let cookieDomain = "";
-  if (hostname.includes("kalako.local")) {
-    cookieDomain = ".kalako.local";
+  if (hostname.includes("portorey.my.id")) {
+    cookieDomain = ".portorey.my.id";
   }
 
   // Hapus cookie untuk kedua kemungkinan: tanpa domain dan dengan domain root

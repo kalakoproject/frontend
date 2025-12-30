@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
               height={32}
               className="object-contain"
             />
-            <span className="text-2xl font-bold flex items-center">
+            <span className="text-3xl font-bold flex items-center">
               {/* Logo 'o' ungu khas Odoo */}
               <span className="text-[#000000]">Kalako</span>
             </span>
@@ -60,7 +60,7 @@ const Navbar: React.FC = () => {
           {/* Bagian Kanan: Login dan Button */}
           <div className="flex items-center space-x-6">
             <Link href="/register" className="bg-[#875A7B] hover:bg-[#9a3f73] text-white px-5 py-2 rounded-md font-medium transition-all">
-              Register
+              Coba Gratis
             </Link>
           </div>
 

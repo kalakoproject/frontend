@@ -7,6 +7,8 @@ function getHostname(req: NextRequest) {
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+  const host = getHostname(req);
+  const token = req.cookies.get("token")?.value;
 
   // ================= STATIC FILE =================
   if (
@@ -20,14 +22,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const host = getHostname(req);
-  const isRoot = host === "kalako.local" || host === "localhost";
-  const token = req.cookies.get("token")?.value;
-
   // ================= ROOT DOMAIN =================
+  const isRoot = host === "portorey.my.id" || host === "localhost";
+
   if (isRoot) {
     // Izinkan akses hanya melalui /admin/login pada root domain
-    // Render halaman login yang ada melalui rewrite ke /login
     if (pathname === "/admin/login") {
       return NextResponse.rewrite(new URL("/login", req.url));
     }
@@ -75,5 +74,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: ["/((?!_next|favicon.ico).*)"], // Matcher untuk pengecekan di semua path
 };

@@ -136,18 +136,19 @@ export default function RetailStockPage() {
       <div className="space-y-6">
         {/* HEADER (judul di atas, filter + aksi di bawah) */}
         <div className="flex flex-col gap-4">
+         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
               Status Kadaluwarsa
             </h2>
 
             {/* legend badge hijau & merah */}
             <div className="mt-2 flex flex-wrap gap-2 items-center">
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-700 text-xs px-3 py-0.5 font-medium">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs px-2.5 py-0.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 sisa 3 Bulan
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-red-500 text-white text-sm px-4 py-1 font-medium">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500 text-white text-xs px-2.5 py-0.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-white/80" />
                 Sisa 1 bulan kadaluarsa
               </span>
@@ -155,54 +156,56 @@ export default function RetailStockPage() {
           </div>
 
           {/* Filter + Actions di bawah heading */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
-            <div className="flex flex-row gap-3 items-center">
-            <div className="relative">
-              <select
-                className="appearance-none border border-slate-300 rounded-lg pl-4 pr-9 py-2 text-sm text-slate-700 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
-                value={categoryId !== undefined ? String(categoryId) : ""}
-                onChange={(e) =>
-                  setCategoryId(
-                    e.target.value ? Number(e.target.value) : undefined
-                  )
-                }
-              >
-                <option value="">Semua Kategori</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                ▼
-              </span>
+          <div className="flex flex-col gap-3">
+            {/* Filter dropdowns */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="relative flex-1 sm:flex-initial">
+                <select
+                  className="appearance-none border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 w-full sm:min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  value={categoryId !== undefined ? String(categoryId) : ""}
+                  onChange={(e) =>
+                    setCategoryId(
+                      e.target.value ? Number(e.target.value) : undefined
+                    )
+                  }
+                >
+                  <option value="">Semua Kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                  ▼
+                </span>
+              </div>
+
+              <div className="relative flex-1 sm:flex-initial">
+                <select
+                  className="appearance-none border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 w-full sm:min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    const val = e.target.value as "all" | "banyak" | "sedikit" | "habis";
+                    setStatusFilter(val);
+                  }}
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="banyak">Stok Banyak</option>
+                  <option value="sedikit">Stok Sedikit</option>
+                  <option value="habis">Stok Habis</option>
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                  ▼
+                </span>
+              </div>
             </div>
 
-            <div className="relative">
-              <select
-                className="appearance-none border border-slate-300 rounded-lg pl-4 pr-9 py-2 text-sm text-slate-700 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-slate-200"
-                value={statusFilter}
-                onChange={(e) => {
-                  // ensure status filter has allowed values only
-                  const val = e.target.value as "all" | "banyak" | "sedikit" | "habis";
-                  setStatusFilter(val);
-                }}
-              >
-                <option value="all">Semua Status</option>
-                <option value="banyak">Stok Banyak</option>
-                <option value="sedikit">Stok Sedikit</option>
-                <option value="habis">Stok Habis</option>
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                ▼
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 type="button"
-                className="px-4 py-2 min-w-[160px] rounded-lg bg-slate-900 text-white text-sm hover:bg-black"
+                className="px-4 py-2 w-full sm:w-auto rounded-lg bg-slate-900 text-white text-sm hover:bg-black"
                 onClick={() => setShowAddModal(true)}
                 aria-label="Tambah Barang"
               >
@@ -211,7 +214,7 @@ export default function RetailStockPage() {
 
               <button
                 type="button"
-                className="px-4 py-2 min-w-[160px] rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                className="px-4 py-2 w-full sm:w-auto rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
                 onClick={() => setShowAddCategoryModal(true)}
                 aria-label="Tambah Kategori"
               >
