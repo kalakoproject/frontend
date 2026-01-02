@@ -7,7 +7,7 @@ const VisiMisi: React.FC = () => {
         
         {/* JUDUL UTAMA */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-[#00000] tracking-wider uppercase">
+          <h2 className="text-4xl font-bold text-black tracking-wider uppercase">
             VISI MISI
           </h2>
           <div className="w-24 h-1 bg-[#9a3f73] mx-auto mt-4 rounded-full opacity-30"></div>
@@ -23,12 +23,9 @@ const VisiMisi: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h3 className="text-3xl font-bold text-[#00000] mb-6">Visi</h3>
+            <h3 className="text-3xl font-bold text-black mb-6">Visi</h3>
             <p className="text-gray-600 text-lg leading-relaxed">
-              Menjadi solusi ERP lokal terdepan yang
-membantu UMKM tumbuh lebih efisien,
-modern, dan terukur melalui digitalisasi
-proses bisnis
+              Menjadi ERP lokal andalan yang membantu UMKM tumbuh lebih rapi, modern, dan terukur lewat sistem bisnis digital.
             </p>
           </div>
 
@@ -39,11 +36,11 @@ proses bisnis
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
               </svg>
             </div>
-            <h3 className="text-3xl font-bold text-[#00000] mb-6">Misi</h3>
+            <h3 className="text-3xl font-bold text-black mb-6">Misi</h3>
               <ul className="list-disc pl-6 text-gray-600 text-lg leading-relaxed space-y-2">
-                <li>Menghadirkan sistem ERP yang mudah digunakan, terjangkau, dan terintegrasi penuh untuk skala usaha kecil dan menengah.</li>
-                <li>Mendukung pelaku usaha mengambil keputusan berbasis data melalui dashboard dan laporan yang akurat.</li>
-                <li>Menyediakan layanan pelanggan yang cepat dan ramah; teknologi terbaik membantu manusia dengan cara yang manusiawi.</li>
+                <li>Menyediakan ERP yang simpel, terjangkau, dan siap dipakai UMKM.</li>
+                <li>Menyajikan data bisnis melalui dashboard dan laporan yang akurat, ringkas, dan mudah dipahami.</li>
+                <li>Memberikan dukungan pelanggan yang responsif dan solutif.</li>
               </ul>
           </div>
 

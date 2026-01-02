@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { apiGet } from '@/lib/api';
-import { getUserFromToken } from '@/lib/auth';
+import { apiGet, apiPost } from '@/lib/api';
+import { getUserFromToken, removeToken } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     async function load() {
@@ -48,12 +51,32 @@ export default function AdminDashboardPage() {
     );
   }
 
+
+  async function handleLogout() {
+    try {
+      await apiPost('/api/auth/logout', {});
+    } catch (err) {
+      // ignore network errors, still clear client token
+      console.warn('Logout API error', err);
+    }
+    removeToken();
+    router.replace('/admin/login');
+  }
+
   return (
-    <div className="min-h-screen p-8 bg-slate-50">
+    <div className="min-h-screen p-8 bg-slate-50 text-black">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Dashboard Admin</h1>
-          <div className="text-sm text-slate-600">Selamat datang, Super Admin</div>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-slate-600">Selamat datang, Super Admin</div>
+            <button
+              onClick={handleLogout}
+              className="text-sm bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

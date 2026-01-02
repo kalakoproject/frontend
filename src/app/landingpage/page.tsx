@@ -14,37 +14,52 @@ const HeroSection: React.FC = () => {
           
           {/* SISI KIRI: TEXT & FORM */}
           <div className="w-full lg:w-1/2 flex flex-col space-y-6 z-10">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#212529] leading-tight">
-              Kalako  {' '}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#212529] leading-tight relative">
+              Kalako,  {' '}
+              <span className="relative inline-block align-middle">
+                <span className="relative z-10">Teman Pintar</span>
+              </span>
+              <br />
               <span className="relative inline-block">
-                Teman Pintar 
-                {/* SVG Lingkaran Merah */}
-                <svg 
-                  className="absolute -bottom-1 -left-1 -right-1 w-[105%] h-[110%] pointer-events-none" 
-                  viewBox="0 0 200 100" 
-                  fill="none" 
-                  stroke="currentColor" 
+                Usaha Kamu 
+                {/* SVG coretan garis dua merah di bawah */}
+                <br />
+                <svg
+                  className="absolute left-0 right-0 -bottom-7 w-[160%] h-15 pointer-events-none"
+                  viewBox="0 0 500 44"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path 
-                    className="text-red-500 opacity-80"
-                    d="M10,50 C10,10 190,10 190,50 C190,90 10,90 15,55" 
-                    strokeWidth="3" 
-                    strokeLinecap="round" 
+                  {/* Garis spidol pertama */}
+                  <path
+                    d="M15 18 Q60 10 110 20 Q160 30 210 18 Q260 6 325 22"
+                    stroke="#ef4444"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                    fill="none"
+                  />
+                  {/* Garis spidol kedua */}
+                  <path
+                    d="M20 32 Q80 28 140 34 Q200 40 260 30 Q300 24 320 36"
+                    stroke="#ef4444"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    opacity="0.5"
+                    fill="none"
                   />
                 </svg>
               </span>
-              <br />
-              Usaha Kamu
             </h1>
 
-            <p className="text-gray-600 text-lg md:text-xl max-w-lg leading-relaxed">“Hai! Yuk mulai perjalanan usahamu lebih teratur. Kalako siap bantu.”
+            <p className="text-gray-600 text-lg md:text-xl max-w-lg leading-relaxed">“Ngatur bisnis, jadi gampang!”
             </p>
           </div>
 
           {/* SISI KANAN: ILLUSTRATION */}
           <div className="w-full lg:w-1/2 relative flex justify-center items-center mt-8 lg:mt-0">
             <img 
-              src="https://img.freepik.com/free-vector/isometric-logistics-concept-with-truck-warehouse-drone_1284-63345.jpg" 
+              src="https://ubico.id/wp-content/uploads/2020/04/desktop.png" 
               alt="ERP Illustration" 
               className="w-full max-w-[400px] lg:max-w-[400px] h-auto object-contain"
             />

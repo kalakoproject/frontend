@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex space-x-8 items-center">
             <a href="#about" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Tentang Kami</a>
             <a href="#vision" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Visi Misi</a>
-            <a href="#values" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Nilai & Budaya</a>
+            <a href="#values" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Nilai</a>
             <a href="#servis" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Fitur</a>
           </div>
 

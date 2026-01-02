@@ -227,6 +227,24 @@ export async function login(payload: { username: string; password: string }) {
   return parseJsonSafe(res);
 }
 
+/** Login untuk admin (super_admin). Hanya dipanggil dari halaman admin di portorey.my.id/admin/login */
+export async function loginAdmin(payload: { username: string; password: string }) {
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Login admin gagal');
+    throw new Error(msg || 'Login admin gagal');
+  }
+
+  return parseJsonSafe(res);
+}
+
 /* ============================================================
  *  DASHBOARD API (Daily / Monthly / Yearly)
  * ============================================================ */
@@ -554,3 +572,77 @@ export async function getMonthlySalesData() {
 
   return parseJsonSafe(res);
 }
+
+/* ============================================================
+ *  PAYMENTS / SUSPEND WORKFLOW (tenant + admin helpers)
+ * ============================================================ */
+
+export async function submitPayment(payload: { amount: number; note?: string; proof_url: string }) {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/payments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...tenantHeader() },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Gagal mengirim bukti pembayaran');
+    throw new Error(msg || 'Gagal mengirim bukti pembayaran');
+  }
+
+  return parseJsonSafe(res);
+}
+
+export async function getTenantPayments() {
+  return apiGet('/api/payments');
+}
+
+export async function getAdminPendingPayments() {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/admin/payments/pending`, {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Gagal memuat pembayaran pending');
+    throw new Error(msg || 'Gagal memuat pembayaran pending');
+  }
+
+  return parseJsonSafe(res);
+}
+
+export async function approvePayment(paymentId: number) {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/admin/payments/${paymentId}/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Gagal approve pembayaran');
+    throw new Error(msg || 'Gagal approve pembayaran');
+  }
+
+  return parseJsonSafe(res);
+}
+
+export async function rejectPayment(paymentId: number, note?: string) {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/admin/payments/${paymentId}/reject`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ note }),
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, 'Gagal reject pembayaran');
+    throw new Error(msg || 'Gagal reject pembayaran');
+  }
+
+  return parseJsonSafe(res);
+}
+

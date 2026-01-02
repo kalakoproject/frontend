@@ -7,7 +7,7 @@ import graficImg from '../../../public/grafic.png';
 
 const CoreValues: React.FC = () => {
   return (
-    <section id="values" className="w-full bg-white py-14 overflow-hidden scroll-mt-20">
+    <section id="values" className="w-full bg-white py-14 overflow-hidden scroll-mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           

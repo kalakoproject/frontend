@@ -171,7 +171,7 @@ export default function RegisterPage() {
                   </label>
                   <input
                     name="owner_name"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Nama lengkap"
                     required
                   />
@@ -182,7 +182,7 @@ export default function RegisterPage() {
                   </label>
                   <input
                     name="store_name"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Contoh: Toko Maju Sejahtera"
                     required
                   />
@@ -191,7 +191,7 @@ export default function RegisterPage() {
 
               {/* Email + OTP */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-800 mb-1">
+                <label className="block text-sm text-black font-semibold text-slate-800 mb-1">
                   📧 Email
                 </label>
                 <div className="flex gap-2">
@@ -200,7 +200,7 @@ export default function RegisterPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="email@example.com"
                     required
                   />
@@ -208,7 +208,7 @@ export default function RegisterPage() {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={!email || sendingOtp || emailAvailable === false || checkingEmail}
-                    className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all disabled:bg-slate-400 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-xs sm:text-sm text-black font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all disabled:bg-slate-400 disabled:cursor-not-allowed"
                   >
                     {sendingOtp
                       ? "Mengirim..."
@@ -226,50 +226,49 @@ export default function RegisterPage() {
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📱 Nomor Whatsapp
                   </label>
                   <input
                     name="phone"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="62812xxxxxxxx"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🔐 Username Login
                   </label>
                   <input
                     name="username"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="username (unik per toko)"
                     required
                   />
-                  <p className="text-xs text-slate-500 mt-1">Username boleh sama di subdomain berbeda, namun unik di toko Anda.</p>
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🔑 Password
                   </label>
                   <input
                     name="password"
                     type="password"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Minimal 6 karakter"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🔐 Kode OTP
                   </label>
                   <input
                     name="otp"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="6 digit dari email"
                     required
                   />
@@ -277,47 +276,47 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-800 mb-2">
+                <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                   🪪 Nomor KTP (opsional)
                 </label>
                 <input
                   name="owner_id_number"
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                   placeholder="NIK pemilik"
                 />
               </div>
 
               {/* Alamat & lokasi */}
               <div>
-                <label className="block text-sm font-semibold text-slate-800 mb-2">
+                <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                   📍 Alamat Lengkap
                 </label>
                 <textarea
                   name="address"
                   rows={2}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white resize-none"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white resize-none"
                   placeholder="Jalan, RT/RW, No, dsb."
                 />
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🏙️ Kota / Kabupaten
                   </label>
                   <input
                     name="city"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Jakarta"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🗺️ Provinsi
                   </label>
                   <input
                     name="province"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="DKI Jakarta"
                   />
                 </div>
@@ -325,22 +324,22 @@ export default function RegisterPage() {
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📌 Kecamatan
                   </label>
                   <input
                     name="district"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Senayan"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-2">
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📍 Kelurahan / Desa
                   </label>
                   <input
                     name="sub_district"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="Gelora"
                   />
                 </div>
@@ -348,7 +347,7 @@ export default function RegisterPage() {
 
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-semibold text-slate-800 mb-3">
+                <label className="block text-sm text-black font-semibold text-slate-800 mb-3">
                   📸 Foto Toko (opsional)
                 </label>
                 <ImageUploader onUploaded={(url) => setStorePhotoUrl(url)} />
@@ -367,7 +366,7 @@ export default function RegisterPage() {
 
             {/* Footer teks di panel kanan */}
             <footer className="mt-6 pt-4 border-t border-slate-200 text-xs text-slate-500 text-center">
-              © 2025 KALAKO - Sistem ERP Retail Terpercaya
+              &copy; {new Date().getFullYear()} PT. Karya Mulya Korpora - KALAKO - Teman Pintar Usaha Kamu!
             </footer>
           </div>
         </div>

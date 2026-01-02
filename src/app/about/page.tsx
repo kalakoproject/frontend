@@ -42,13 +42,7 @@ const About: React.FC = () => {
                Tentang <span className="font-bold">Kalako</span>
              </h2>
              <p className="text-gray-600 text-lg">
-                Kalako ERP adalah solusi sistem manajemen
-                terpadu berbasis cloud yang dirancang
-                khusus untuk membantu UMKM dan bisnis
-                retail di Indonesia dalam mengelola seluruh
-                proses bisnis secara efisien mulai dari
-                penjualan, pembelian, stok, keuangan, hingga
-                laporan akuntansi
+                Kalako ERP merupakan solusi ERP berbasis cloud untuk UMKM dan retail yang ingin operasional lebih terstruktur, dan efisien.
              </p>
           </div>
         </div>

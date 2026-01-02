@@ -30,11 +30,26 @@ export function setToken(token: string): void {
   expiresDate.setTime(expiresDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 hari
   
   const domainPart = cookieDomain ? `; domain=${cookieDomain}` : "";
-  const cookieString = `token=${token}; path=/${domainPart}; expires=${expiresDate.toUTCString()}`;
+  const cookieString = `token=${token}; path=/` + domainPart + `; expires=${expiresDate.toUTCString()}`;
   document.cookie = cookieString;
   
   console.log("[AUTH] Token saved to localStorage and cookie");
   console.log("[AUTH] Cookie domain:", cookieDomain || "none (same-origin)");
+}
+
+export function setAdminToken(token: string): void {
+  if (typeof window === "undefined") return;
+
+  // Admin token only needs to be available on root domain
+  const hostname = window.location.hostname;
+  const cookieDomain = hostname.includes("portorey.my.id") ? ".portorey.my.id" : "";
+
+  const expiresDate = new Date();
+  expiresDate.setTime(expiresDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const domainPart = cookieDomain ? `; domain=${cookieDomain}` : "";
+  const cookieString = `admin_token=${token}; path=/` + domainPart + `; expires=${expiresDate.toUTCString()}`;
+  document.cookie = cookieString;
+  console.log("[AUTH] Admin token cookie set", cookieDomain || "(same-origin)");
 }
 
 export function removeToken(): void {
@@ -53,6 +68,11 @@ export function removeToken(): void {
   document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
   if (cookieDomain) {
     document.cookie = `token=; path=/; domain=${cookieDomain}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+  }
+  // clear admin_token if present
+  document.cookie = `admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+  if (cookieDomain) {
+    document.cookie = `admin_token=; path=/; domain=${cookieDomain}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
   }
 }
 

@@ -24,11 +24,11 @@ const Servis: React.FC = () => {
   ];
 
   return (
-    <section id="servis" className="w-full bg-white py-14 scroll-mt-20">
+    <section id="servis" className="w-full bg-white py-14 scroll-mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-[#00000] tracking-wider uppercase">
+          <h2 className="text-4xl font-bold text-black tracking-wider uppercase">
            Fitur
           </h2>
           <div className="w-24 h-1 bg-[#9a3f73] mx-auto mt-4 rounded-full opacity-30"></div>
@@ -46,7 +46,7 @@ const Servis: React.FC = () => {
               </div>
 
               {/* TITLE */}
-              <h3 className="text-2xl font-bold text-[#00000] mb-6 tracking-wide">
+              <h3 className="text-2xl font-bold text-black mb-6 tracking-wide">
                 {item.title}
               </h3>
 

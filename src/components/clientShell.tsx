@@ -41,18 +41,42 @@ export default function ClientShell({
     const host = window.location.hostname.split(".")[0];
     setStoreName(host.replace("-", " "));
 
-    // Get store photo from database via API
-    getClientInfo()
-      .then((data) => {
-        if (data && data.store_photo_url) {
-          // Construct full URL with backend base URL
-          const fullUrl = `${getApiBase()}${data.store_photo_url}`;
-          setStorePhoto(fullUrl);
+    // As a client-side fallback, check tenant status and redirect to suspended page if necessary
+    (async () => {
+      try {
+        const base = getApiBase();
+        const res = await fetch(`${base}/api/tenant/status`, { cache: 'no-store' });
+        if (res.ok) {
+          const info = await res.json();
+          const now = Date.now();
+          let suspended = false;
+          if ((info.status || '').toLowerCase() === 'suspended') suspended = true;
+          else if (info.trial_ends_at) {
+            const ends = Date.parse(info.trial_ends_at);
+            if (!isNaN(ends) && ends < now) suspended = true;
+          }
+          if (suspended) {
+            window.location.href = '/suspended';
+            return;
+          }
         }
-      })
-      .catch((err) => {
-        console.error("Failed to load client info:", err);
-      });
+      } catch (err) {
+        console.error('tenant status check failed:', err);
+      }
+
+      // Get store photo from database via API
+      getClientInfo()
+        .then((data) => {
+          if (data && data.store_photo_url) {
+            // Construct full URL with backend base URL
+            const fullUrl = `${getApiBase()}${data.store_photo_url}`;
+            setStorePhoto(fullUrl);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load client info:", err);
+        });
+    })();
   }, []);
 
   async function handleLogout() {

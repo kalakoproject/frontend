@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
           {/* COPYRIGHT (Opsional, agar terlihat profesional) */}
           <div className="pt-4">
             <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} Kalako Software. All rights reserved.
+              &copy; {new Date().getFullYear()} PT. Karya Mulya Korpora. All rights reserved.
             </p>
           </div>
 
