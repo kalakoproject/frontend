@@ -81,7 +81,18 @@ export default function TransaksiPage() {
   // Tampilkan loading saat check auth
   if (!isReady) {
     return (
-      <ClientShell title="Transaksi">
+      <ClientShell
+        title={
+          <div className="flex items-center gap-2">
+            <img
+              src="/Logo.png"
+              alt="Kalako"
+              className="h-12 w-auto"
+            />
+            <span className="text-3xl">Transaksi Kasir</span>
+          </div>
+        }
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="inline-block animate-spin text-4xl mb-2">⏳</div>
@@ -93,7 +104,18 @@ export default function TransaksiPage() {
   }
 
   return (
-    <ClientShell title="💳 Transaksi Kasir">
+    <ClientShell
+      title={
+        <div className="flex items-center gap-2">
+          <img
+            src="/Logo.png"
+            alt="Kalako"
+            className="h-12 w-auto"
+          />
+          <span className="text-3xl">Transaksi Kasir</span>
+        </div>
+      }
+    >
       <div className="space-y-6">
         {/* SEARCH BAR (minimal, non-card) */}
         <div className="space-y-3">
@@ -132,7 +154,7 @@ export default function TransaksiPage() {
 
             <input
               type="text"
-              className="w-full pl-10 pr-12 py-3 rounded-full text-sm bg-white border border-slate-200 shadow-sm focus:shadow-md focus:outline-none focus:border-amber-400 transition-all"
+              className="w-full pl-10 pr-12 py-3 rounded-full text-black text-sm bg-white border border-slate-200 shadow-sm focus:shadow-md focus:outline-none focus:border-amber-400 transition-all"
               placeholder="Ketik nama produk untuk menambahkan ke keranjang..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

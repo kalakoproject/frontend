@@ -14,6 +14,18 @@ export default function LoginPage() {
     const host = window.location.hostname;
     const firstPart = host.split(".")[0];
     setSubdomain(firstPart);
+
+    // Fallback auto login dari root-login via URL param
+    const params = new URLSearchParams(window.location.search);
+    const autoToken = params.get("auto_token");
+
+    if (autoToken) {
+      setToken(autoToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
+    }
   }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -75,12 +87,12 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-900 mb-1">
-                  Email
+                  Username
                 </label>
                 <input
                   name="username"
-                  className="w-full border border-slate-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
-                  placeholder="email@example.com"
+                  className="w-full border border-slate-300 rounded-md px-4 py-2 text-black text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                  placeholder="username"
                 />
               </div>
 
@@ -93,7 +105,7 @@ export default function LoginPage() {
                   <input
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    className="w-full border border-slate-300 rounded-md px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                    className="w-full border border-slate-300 rounded-md text-black px-4 py-2 pr-10 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
                     placeholder="Masukkan password 6 digit dengan kombinasi angka dan huruf"
                   />
                   <button
@@ -167,7 +179,7 @@ export default function LoginPage() {
           {/* CARD FOOTER */}
           <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 text-center">
             <p className="text-xs text-slate-600">
-              © 2025 KALAKO - Sistem ERP Retail Terpercaya
+              &copy; {new Date().getFullYear()} KALAKO - Sistem ERP Retail Terpercaya
             </p>
           </div>
         </div>

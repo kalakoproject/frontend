@@ -10,7 +10,7 @@ export default function ClientShell({
   title,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -39,7 +39,8 @@ export default function ClientShell({
 
   useEffect(() => {
     const host = window.location.hostname.split(".")[0];
-    setStoreName(host.replace("-", " "));
+    const fallbackName = host.replace(/-/g, " ");
+    setStoreName(fallbackName);
 
     // As a client-side fallback, check tenant status and redirect to suspended page if necessary
     (async () => {
@@ -67,10 +68,15 @@ export default function ClientShell({
       // Get store photo from database via API
       getClientInfo()
         .then((data) => {
-          if (data && data.store_photo_url) {
-            // Construct full URL with backend base URL
-            const fullUrl = `${getApiBase()}${data.store_photo_url}`;
-            setStorePhoto(fullUrl);
+          if (data) {
+            if (data.name) {
+              setStoreName(String(data.name));
+            }
+            if (data.store_photo_url) {
+              // Construct full URL with backend base URL
+              const fullUrl = `${getApiBase()}${data.store_photo_url}`;
+              setStorePhoto(fullUrl);
+            }
           }
         })
         .catch((err) => {
@@ -160,6 +166,7 @@ export default function ClientShell({
             </div>
             {/* Store Photo */}
             <div className="mb-4 hidden md:flex items-center gap-3">
+              <Link href="/dashboard" className="flex items-center gap-3">
               <Image
                 src={storePhoto || "/kalako_logo.png"}
                 alt={storeName}
@@ -168,6 +175,8 @@ export default function ClientShell({
                 className="rounded-md object-cover shadow-md"
                 unoptimized
               />
+              </Link>
+              
             </div>
 
             {/* Store name - only desktop */}

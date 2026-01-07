@@ -139,7 +139,8 @@ export default function HistoriTransaksiPage() {
             <span>${formatRp(tx.change_amount)}</span>
           </div>
           <div class="sep"></div>
-          <div style="text-align:center;font-size:12px;color:#333;">Terima kasih telah berbelanja</div>
+          <div style="text-align:center;font-size:12px;color:#333;">Terima kasih telah berbelanja<br></div>
+          <div style="text-align:center;font-size:12px;color:#333;"><br><br>Powered by PT. Karya Mulya Korpora - KALAKO</div>
           <script>
             window.onload = function() { window.print(); }
           </script>
@@ -253,7 +254,18 @@ export default function HistoriTransaksiPage() {
   // Tampilkan loading saat check auth
   if (!isReady) {
     return (
-      <ClientShell title="Histori Transaksi">
+      <ClientShell
+        title={
+          <div className="flex items-center gap-2">
+            <img
+              src="/Logo.png"
+              alt="Kalako"
+              className="h-12 w-auto"
+            />
+            <span className="text-3xl">Histori Transaksi</span>
+          </div>
+        }
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="inline-block animate-spin text-4xl mb-2">⏳</div>
@@ -265,7 +277,18 @@ export default function HistoriTransaksiPage() {
   }
 
   return (
-    <ClientShell title="📜 Histori Transaksi">
+    <ClientShell
+      title={
+        <div className="flex items-center gap-2">
+          <img
+            src="/Logo.png"
+            alt="Kalako"
+            className="h-12 w-auto"
+          />
+          <span className="text-3xl">Histori Transaksi</span>
+        </div>
+      }
+    >
       <div className="w-full">
         {/* Date Filter */}
         <div className="mb-4 sm:mb-6">
@@ -281,7 +304,7 @@ export default function HistoriTransaksiPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-black text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
                   />
                 </div>
                 
@@ -293,7 +316,7 @@ export default function HistoriTransaksiPage() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                    className="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-black text-sm bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
                   />
                 </div>
                 
@@ -366,7 +389,7 @@ export default function HistoriTransaksiPage() {
                     <div className="py-3 px-15 border-r border-slate-200 text-slate-700">
                       {tx.cashier_name || "Unknown"}
                     </div>
-                    <div className="py-3 px-4 border-r border-slate-200 text-right font-bold">
+                    <div className="py-3 px-4 border-r border-slate-200 text-black text-right font-bold">
                       {formatRupiah(tx.total_amount)}
                     </div>
                     <div className="py-3 px-4 border-r border-slate-200 text-right text-slate-600">

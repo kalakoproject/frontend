@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import path from "path";
 
 /**
  * Ambil hostname tanpa port
@@ -26,7 +27,9 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/favicon.ico") ||
     pathname.startsWith("/assets") ||
     pathname.startsWith("/public") ||
-    pathname.startsWith("/landingpage")
+    pathname.startsWith("/landingpage") ||
+    pathname.startsWith("/kalako_putih.png") ||
+    pathname.startsWith("/Logo.png")
   ) {
     return NextResponse.next();
   }
@@ -57,13 +60,13 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // 🔁 ROOT DOMAIN: /login → /register
+    // 🔁 ROOT DOMAIN: /login → /root-login
     if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/register", req.url));
+      return NextResponse.redirect(new URL("/root-login", req.url));
     }
 
     // ✅ ROOT ONLY PAGES
-    if (pathname === "/" || pathname === "/register" || pathname === "/not") {
+    if (pathname === "/" || pathname === "/register" || pathname === "/not" || pathname === "/root-login" || pathname === "/forgot-password") {
       return NextResponse.next();
     }
 

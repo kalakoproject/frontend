@@ -31,7 +31,7 @@ export default function RetailStockPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "banyak" | "sedikit" | "habis">("all");
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  
   const [editProduct, setEditProduct] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -120,7 +120,18 @@ export default function RetailStockPage() {
 
   if (!isReady) {
     return (
-      <ClientShell title="Stok Retail">
+      <ClientShell
+        title={
+          <div className="flex items-center gap-2">
+            <img
+              src="/Logo.png"
+              alt="Kalako"
+              className="h-12 w-auto"
+            />
+            <span className="text-3xl">Stok Retail</span>
+          </div>
+        }
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="inline-block animate-spin text-4xl mb-2">⏳</div>
@@ -132,7 +143,18 @@ export default function RetailStockPage() {
   }
 
   return (
-    <ClientShell title="📦Stok Retail">
+    <ClientShell
+      title={
+        <div className="flex items-center gap-2">
+          <img
+            src="/Logo.png"
+            alt="Kalako"
+            className="h-12 w-auto"
+          />
+          <span className="text-3xl">Stok Retail</span>
+        </div>
+      }
+    >
       <div className="space-y-6">
         {/* HEADER (judul di atas, filter + aksi di bawah) */}
         <div className="flex flex-col gap-4">
@@ -212,14 +234,7 @@ export default function RetailStockPage() {
                 Tambah Barang
               </button>
 
-              <button
-                type="button"
-                className="px-4 py-2 w-full sm:w-auto rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => setShowAddCategoryModal(true)}
-                aria-label="Tambah Kategori"
-              >
-                Tambah Kategori
-              </button>
+              {/* Kategori sekarang dapat ditambahkan langsung dari form produk */}
             </div>
           </div>
         </div>
@@ -405,20 +420,11 @@ export default function RetailStockPage() {
             setShowAddModal(false);
             loadData();
           }}
+          onCategoryAdded={loadData}
         />
       )}
 
-      {/* MODAL TAMBAH KATEGORI */}
-      {showAddCategoryModal && (
-        <CategoryFormModal
-          onClose={() => setShowAddCategoryModal(false)}
-          onSubmit={async (data) => {
-            await addRetailCategory(data);
-            setShowAddCategoryModal(false);
-            loadData();
-          }}
-        />
-      )}
+      {/* Tambah kategori sekarang tersedia di dalam select Kategori (inline) */}
 
       {/* MODAL EDIT */}
       {editProduct && (
@@ -451,6 +457,7 @@ export default function RetailStockPage() {
               throw err;
             }
           }}
+          onCategoryAdded={loadData}
         />
       )}
       </div>
@@ -545,16 +552,20 @@ function ProductFormModal({
   categories,
   onClose,
   onSubmit,
+  onCategoryAdded,
 }: {
   title: string;
   initial?: any;
   categories?: any[];
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
+  onCategoryAdded?: () => void;
 }) {
   const [form, setForm] = useState({
     name: initial?.name || "",
-    selling_price: initial?.selling_price?.toString() || "",
+    selling_price: initial?.selling_price
+      ? Number(initial.selling_price).toLocaleString("id-ID")
+      : "",
     unit: initial?.unit || "PCS",
     stock: initial?.stock?.toString() || "",
     category_id: initial?.category_id?.toString() || "",
@@ -564,6 +575,16 @@ function ProductFormModal({
   });
 
   const [saving, setSaving] = useState(false);
+  const [noExpiry, setNoExpiry] = useState<boolean>(initial ? !initial?.expiry_date : false);
+  const [localCategories, setLocalCategories] = useState<any[]>(categories || []);
+  const [showAddInline, setShowAddInline] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
+
+  // sync when parent categories change
+  useEffect(() => {
+    setLocalCategories(categories || []);
+  }, [categories]);
 
   function update(key: string, val: any) {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -575,13 +596,15 @@ function ProductFormModal({
       return;
     }
 
+    const numericPrice = Number(String(form.selling_price).replace(/\D/g, "")) || 0;
+
     const payload = {
       name: form.name,
-      selling_price: Number(form.selling_price) || 0,
+      selling_price: numericPrice,
       unit: form.unit,
       stock: form.stock ? Number(form.stock) : 0,
       category_id: form.category_id ? Number(form.category_id) : undefined,
-      expiry_date: form.expiry_date || undefined,
+      expiry_date: noExpiry ? undefined : form.expiry_date || undefined,
     };
 
     try {
@@ -595,7 +618,7 @@ function ProductFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 text-black">
       <div className="bg-white rounded-xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
@@ -619,10 +642,16 @@ function ProductFormModal({
               Harga Jual
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.selling_price}
-              onChange={(e) => update("selling_price", e.target.value)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                const formatted = raw ? Number(raw).toLocaleString("id-ID") : "";
+                update("selling_price", formatted);
+              }}
             />
           </div>
 
@@ -663,15 +692,75 @@ function ProductFormModal({
             <select
               className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
               value={form.category_id}
-              onChange={(e) => update("category_id", e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "__add__") {
+                  setShowAddInline(true);
+                  update("category_id", "");
+                } else {
+                  setShowAddInline(false);
+                  update("category_id", v);
+                }
+              }}
             >
               <option value="">-- Pilih Kategori --</option>
-              {categories?.map((c) => (
+              {localCategories?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
+              <option value="__add__">➕ Tambah kategori...</option>
             </select>
+
+            {showAddInline && (
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  className="border border-slate-300 flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  placeholder="Nama kategori baru"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60"
+                  disabled={addingCategory}
+                  onClick={async () => {
+                    if (!newCategoryName.trim()) return alert("Nama kategori wajib diisi");
+                    try {
+                      setAddingCategory(true);
+                      const created = await addRetailCategory({ name: newCategoryName.trim() });
+
+                      // created may be the new category object or something else; try to normalize
+                      const newCat = (created && created.id) ? created : { id: created?.id || Date.now(), name: newCategoryName.trim() };
+
+                      setLocalCategories((prev) => [...prev, newCat]);
+                      setForm((prev) => ({ ...prev, category_id: String(newCat.id) }));
+                      setShowAddInline(false);
+                      setNewCategoryName("");
+                      onCategoryAdded?.();
+                    } catch (err: any) {
+                      alert(err?.message || "Gagal menambah kategori");
+                    } finally {
+                      setAddingCategory(false);
+                    }
+                  }}
+                >
+                  {addingCategory ? "Menyimpan..." : "Simpan"}
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  onClick={() => {
+                    setShowAddInline(false);
+                    setNewCategoryName("");
+                    update("category_id", "");
+                  }}
+                >
+                  Batal
+                </button>
+              </div>
+            )}
           </div>
 
           <div>
@@ -680,10 +769,27 @@ function ProductFormModal({
             </label>
             <input
               type="date"
-              className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className={`border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200 ${noExpiry ? 'bg-slate-50 text-slate-400' : ''}`}
               value={form.expiry_date}
               onChange={(e) => update("expiry_date", e.target.value)}
+              disabled={noExpiry}
             />
+
+            <div className="mt-2 flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-300"
+                  checked={noExpiry}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setNoExpiry(checked);
+                    if (checked) update("expiry_date", "");
+                  }}
+                />
+                <span>Tanpa kadaluarsa</span>
+              </label>
+            </div>
           </div>
         </div>
 

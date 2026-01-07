@@ -141,7 +141,18 @@ export default function LaporanPage() {
 
   if (error) {
     return (
-      <ClientShell title="🧾 Laporan Penjualan">
+      <ClientShell
+        title={
+          <div className="flex items-center gap-2">
+            <img
+              src="/Logo.png"
+              alt="Kalako"
+              className="h-12 w-auto"
+            />
+            <span className="text-3xl">Laporan Penjualan</span>
+          </div>
+        }
+      >
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
           <p className="font-bold">⚠️ Terjadi Error</p>
           <p className="text-sm mt-1">{error}</p>
@@ -157,7 +168,18 @@ export default function LaporanPage() {
   }
 
   return (
-    <ClientShell title="🧾 Laporan Penjualan">
+    <ClientShell
+      title={
+        <div className="flex items-center gap-2">
+          <img
+            src="/Logo.png"
+            alt="Kalako"
+            className="h-12 w-auto"
+          />
+          <span className="text-3xl">Laporan Penjualan</span>
+        </div>
+      }
+    >
       {/* ✅ wrapper max width supaya desktop & mobile terasa sama */}
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">

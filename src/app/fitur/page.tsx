@@ -24,7 +24,7 @@ const Servis: React.FC = () => {
   ];
 
   return (
-    <section id="servis" className="w-full bg-white py-14 scroll-mt-10">
+    <section id="servis" className="w-full bg-white py-24 scroll-mt-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center mb-16">

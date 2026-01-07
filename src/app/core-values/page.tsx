@@ -7,7 +7,7 @@ import graficImg from '../../../public/grafic.png';
 
 const CoreValues: React.FC = () => {
   return (
-    <section id="values" className="w-full bg-white py-14 overflow-hidden scroll-mt-10">
+    <section id="values" className="w-full bg-white py-14 overflow-hidden scroll-mt-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           
@@ -31,12 +31,6 @@ const CoreValues: React.FC = () => {
 
           {/* SISI KANAN: ICON TETAP KECIL & RAPI */}
           <div className="w-full lg:w-1/2 flex flex-col space-y-10">
-            <div>
-               <h2 className="text-3xl md:text-4xl font-bold leading-tight">
-                <span className="text-[#9a3f73]">Nilai</span> <span className="text-gray-900">Perusahaan</span>
-              </h2>
-            </div>
-
             <div className="space-y-6">
               {/* Item 1 */}
               <div className="flex items-start gap-4">

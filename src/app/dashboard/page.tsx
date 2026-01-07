@@ -95,7 +95,18 @@ export default function DashboardPage() {
 
   if (!isReady) {
     return (
-      <ClientShell title="📊 Dashboard">
+      <ClientShell
+  title={
+    <div className="flex items-center gap-2">
+      <img
+        src="/Logo.png"
+        alt="Kalako"
+        className="h-10 w-auto"
+      />
+      <span>Dashboard</span>
+    </div>
+  }
+>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="inline-block animate-spin text-4xl mb-2">⏳</div>
@@ -107,7 +118,18 @@ export default function DashboardPage() {
   }
 
   return (
-    <ClientShell title="📊 Dashboard">
+    <ClientShell
+  title={
+    <div className="flex items-center gap-2">
+      <img
+        src="/Logo.png"
+        alt="Kalako"
+        className="h-12 w-auto"
+      />
+      <span className="text-3xl">Dashboard</span>
+    </div>
+  }
+>
       {/* Wrapper responsive yang konsisten */}
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-4">
         <div className="mx-auto w-full max-w-6xl space-y-6">

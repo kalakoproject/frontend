@@ -58,7 +58,10 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Bagian Kanan: Login dan Button */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4">
+            <Link href="/root-login" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">
+              Login
+            </Link>
             <Link href="/register" className="bg-[#875A7B] hover:bg-[#9a3f73] text-white px-5 py-2 rounded-md font-medium transition-all">
               Coba Gratis
             </Link>

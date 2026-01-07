@@ -104,27 +104,31 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="w-full min-h-screen bg-slate-900">
+    <main style={{ fontFamily: 'Futura, "Trebuchet MS", Arial, sans-serif' }} className="w-full min-h-screen bg-slate-900">
       {/* 2 kolom imbang */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+      <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] min-h-screen">
         {/* LEFT PANEL: Daftarkan toko - bg #1A202C */}
-        <div className="flex flex-col justify-center px-10 py-12 bg-[#1A202C] text-slate-100">
-          <div className="text-5xl mb-4">🏪</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+        <div className="relative flex flex-col justify-center px-10 py-12 bg-[#66023c] text-slate-100">
+          <div className="text-5xl mb-4">
+              <div className="absolute top-6 left-6">
+              <img src="/kalako_putih.png" alt="Kalako logo" className="h-17 w-auto" />
+              </div>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-10 text-white">
             Daftarkan Toko Anda
           </h1>
-          <p className="text-sm md:text-base text-slate-300 mb-6 max-w-md">
+          <p className="text-xl md:text-2xl text-slate-300 mb-6 max-w-md">
             Mulai mengelola bisnis retail Anda dengan sistem ERP KALAKO yang
-            terintegrasi, mudah digunakan, dan mendukung banyak cabang.
+            terintegrasi, dan mudah digunakan!
           </p>
 
-          <ul className="space-y-3 text-sm md:text-base text-slate-200">
-            <li className="flex items-center gap-2">
+          <ul className="space-y-3 text-sm md:text-base text-slate-200 mt-30">
+            {/* <li className="flex items-center gap-2">
               <span className="text-xl">✅</span> Satu akun untuk banyak cabang
             </li>
             <li className="flex items-center gap-2">
               <span className="text-xl">⚙️</span> Atur user dan role karyawan sendiri
-            </li>
+            </li> */}
             <li className="flex items-center gap-2">
               <span className="text-xl">📊</span> Dashboard realtime untuk pemilik
             </li>
@@ -135,8 +139,8 @@ export default function RegisterPage() {
         </div>
 
         {/* RIGHT PANEL: Buat akun toko - FULL PANEL (bukan card) */}
-        <div className="bg-white px-4 sm:px-8 lg:px-12 py-8 lg:py-10 lg:h-screen overflow-y-auto flex items-start justify-center">
-          <div className="w-full max-w-xl lg:max-w-2xl">
+        <div className="bg-white px-6 sm:px-12 lg:px-20 py-8 lg:py-10 lg:h-screen overflow-y-auto flex items-start justify-center">
+          <div className="w-full max-w-xl lg:max-w-3xl">
             {/* Header sederhana, tanpa gradient biru */}
             <header className="mb-6 border-b border-slate-200 pb-4">
               <h2 className="text-2xl font-semibold text-slate-900">

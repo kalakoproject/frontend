@@ -15,41 +15,46 @@ const HeroSection: React.FC = () => {
           {/* SISI KIRI: TEXT & FORM */}
           <div className="w-full lg:w-1/2 flex flex-col space-y-6 z-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#212529] leading-tight relative">
-              Kalako,  {' '}
+                <span style={{ color: '#670044' }}>Kalako,</span>{' '}
               <span className="relative inline-block align-middle">
                 <span className="relative z-10">Teman Pintar</span>
               </span>
               <br />
-              <span className="relative inline-block">
-                Usaha Kamu 
-                {/* SVG coretan garis dua merah di bawah */}
-                <br />
-                <svg
-                  className="absolute left-0 right-0 -bottom-7 w-[160%] h-15 pointer-events-none"
-                  viewBox="0 0 500 44"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Garis spidol pertama */}
-                  <path
-                    d="M15 18 Q60 10 110 20 Q160 30 210 18 Q260 6 325 22"
-                    stroke="#ef4444"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    opacity="0.85"
-                    fill="none"
-                  />
-                  {/* Garis spidol kedua */}
-                  <path
-                    d="M20 32 Q80 28 140 34 Q200 40 260 30 Q300 24 320 36"
-                    stroke="#ef4444"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    opacity="0.5"
-                    fill="none"
-                  />
-                </svg>
-              </span>
+              <span className="relative inline-block leading-tight">
+  Usaha Kamu
+  <svg
+    className="absolute left-0 -bottom-2 w-full h-[20px] pointer-events-none"
+    viewBox="0 0 300 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="none"
+  >
+    {/* Main underline */}
+    <path
+      d="M4 14 
+         C60 20, 120 6, 180 10
+         C220 12, 260 8, 296 10"
+      stroke="#c30081"
+      strokeWidth="6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+
+    {/* Secondary jitter for crayon feel */}
+    <path
+      d="M6 16 
+         C62 22, 122 10, 182 14
+         C222 16, 262 12, 298 14"
+      stroke="#ec009c"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.6"
+      fill="none"
+    />
+  </svg>
+</span>
             </h1>
 
             <p className="text-gray-600 text-lg md:text-xl max-w-lg leading-relaxed">“Ngatur bisnis, jadi gampang!”
