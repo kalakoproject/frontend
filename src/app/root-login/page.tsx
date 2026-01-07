@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { setToken } from "@/lib/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RootLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -44,10 +46,15 @@ export default function RootLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Kalako</h1>
+          <img
+            src="/Logo.png"
+            alt="Kalako logo"
+            className="mx-auto h-20 w-auto mb-3"
+          />
+          <h2 className="text-3xl font-bold text-gray-800">Kalako</h2>
           <p className="text-gray-600 mt-2">Login ke akun Anda</p>
         </div>
 
@@ -61,7 +68,7 @@ export default function RootLoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
               placeholder="email@example.com"
             />
           </div>
@@ -70,14 +77,25 @@ export default function RootLoginPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
+                placeholder="Masukkan password Anda"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -89,7 +107,7 @@ export default function RootLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#9F0069] hover:bg-[#800054] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Memproses..." : "Login"}
           </button>
@@ -98,12 +116,12 @@ export default function RootLoginPage() {
         <div className="mt-6 text-center space-y-2 text-sm text-gray-600">
           <p>
             Belum punya akun?{" "}
-            <a href="/register" className="text-purple-600 hover:text-purple-700 font-semibold">
+            <a href="/register" className="text-[#9F0069] hover:text-[#800054] font-semibold">
               Daftar sekarang
             </a>
           </p>
           <p>
-            <a href="/forgot-password" className="text-purple-600 hover:text-purple-700 font-semibold">
+            <a href="/forgot-password" className="text-[#9F0069] hover:text-[#800054] font-semibold">
               Lupa password?
             </a>
           </p>

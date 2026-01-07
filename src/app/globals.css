@@ -58,3 +58,9 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
+
+/* Hide default password reveal toggle (Edge/IE) so only our custom toggle shows */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

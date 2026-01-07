@@ -76,9 +76,14 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center ">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 p-8">
         <div className="text-center mb-8">
+          <img
+            src="/Logo.png"
+            alt="Kalako logo"
+            className="mx-auto h-20 w-auto mb-3"
+          />
           <h1 className="text-3xl font-bold text-gray-800">Kalako</h1>
           <p className="text-gray-600 mt-2">Reset Password</p>
         </div>
@@ -92,7 +97,7 @@ export default function ForgotPasswordPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
                 placeholder="email@example.com"
               />
             </div>
@@ -101,7 +106,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#9F0069] hover:bg-[#800054] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Mengirim OTP..." : "Kirim OTP"}
             </button>
@@ -115,7 +120,7 @@ export default function ForgotPasswordPage() {
                 required
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
                 placeholder="123456"
               />
             </div>
@@ -126,7 +131,7 @@ export default function ForgotPasswordPage() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
                 placeholder="••••••••"
               />
             </div>
@@ -137,7 +142,7 @@ export default function ForgotPasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DF0093] text-gray-800"
                 placeholder="••••••••"
               />
             </div>
@@ -146,7 +151,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#9F0069] hover:bg-[#800054] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Mereset..." : "Reset Password"}
             </button>
@@ -157,7 +162,7 @@ export default function ForgotPasswordPage() {
                 setError("");
                 setSuccess("");
               }}
-              className="w-full text-purple-600 hover:text-purple-700 font-semibold py-2"
+              className="w-full text-[#9F0069] hover:text-[#800054] font-semibold py-2"
             >
               Kembali
             </button>
@@ -166,7 +171,7 @@ export default function ForgotPasswordPage() {
 
         <div className="mt-6 text-center text-sm text-gray-600">
           Ingat password? {" "}
-          <Link href="/root-login" className="text-purple-600 hover:text-purple-700 font-semibold">
+          <Link href="/root-login" className="text-[#9F0069] hover:text-[#800054] font-semibold">
             Login di sini
           </Link>
         </div>
