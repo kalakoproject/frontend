@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { getApiBase } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -19,7 +20,8 @@ export default function ForgotPasswordPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetch("https://api.portorey.my.id/api/password-reset/request-reset", {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/password-reset/request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -53,7 +55,8 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("https://api.portorey.my.id/api/password-reset/reset-password", {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/password-reset/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp, newPassword }),

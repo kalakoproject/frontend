@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { setToken } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
+import { getApiBase } from "@/lib/api";
 
 export default function RootLoginPage() {
   const [email, setEmail] = useState("");
@@ -16,7 +17,8 @@ export default function RootLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://api.portorey.my.id/api/root-login/root-login", {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/root-login/root-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -35,7 +37,11 @@ export default function RootLoginPage() {
       setToken(data.token);
 
       // Redirect ke subdomain dengan fallback token di URL
-      const targetUrl = `https://${data.subdomain}.portorey.my.id/login?auto_token=${encodeURIComponent(
+      const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+      const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
+      const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+      const portPart = frontendPort ? `:${frontendPort}` : "";
+      const targetUrl = `${protocol}//${data.subdomain}.${baseDomain}${portPart}/login?auto_token=${encodeURIComponent(
         data.token
       )}`;
       window.location.href = targetUrl;

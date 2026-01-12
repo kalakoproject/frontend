@@ -95,7 +95,11 @@ export default function RegisterPage() {
       setSuccess("Pendaftaran berhasil, mengalihkan ke halaman login toko...");
 
       const subdomain = resp.client.subdomain;
-      window.location.href = `http://${subdomain}.portorey.my.id/login`;
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
+  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const portPart = frontendPort ? `:${frontendPort}` : "";
+  window.location.href = `${protocol}//${subdomain}.${baseDomain}${portPart}/login`;
     } catch (err: any) {
       setError(err.message);
     } finally {

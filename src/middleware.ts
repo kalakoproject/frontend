@@ -35,7 +35,7 @@ export function middleware(req: NextRequest) {
   }
 
   // ================= DOMAIN DETECTION =================
-  const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "portorey.my.id";
+  const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
 
   const isRootDomain =
     host === BASE_DOMAIN ||
@@ -123,7 +123,8 @@ export function middleware(req: NextRequest) {
      * 🛑 CEK STATUS SUSPEND KE BACKEND
      */
     const apiBase =
-      process.env.NEXT_PUBLIC_API_BASE || `https://api.${BASE_DOMAIN}`;
+      process.env.NEXT_PUBLIC_API_BASE ||
+      (BASE_DOMAIN.endsWith(".local") ? `http://${BASE_DOMAIN}:4000` : `https://api.${BASE_DOMAIN}`);
 
     return fetch(`${apiBase}/api/tenant/status`, {
       headers: {
