@@ -645,4 +645,3 @@ export async function rejectPayment(paymentId: number, note?: string) {
 
   return parseJsonSafe(res);
 }
-
