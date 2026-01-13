@@ -35,7 +35,10 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           
           {/* Bagian Kiri: Logo dan Tulisan */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer gap-2">
+          <div 
+            className="flex-shrink-0 flex items-center cursor-pointer gap-2"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <Image 
               src={logoImg} 
               alt="Kalako Logo" 

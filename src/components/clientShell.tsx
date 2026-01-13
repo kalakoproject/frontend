@@ -124,7 +124,7 @@ export default function ClientShell({
 
       {/* NAVBAR MOBILE / SIDEBAR DESKTOP */}
       <aside className={`
-        bg-white shadow transition-all md:sticky md:top-0 md:self-start md:flex-shrink-0
+        bg-white shadow md:sticky md:top-0 md:self-start md:flex-shrink-0
         ${sidebarCollapsed 
           ? 'fixed top-0 left-0 right-0 h-16 w-full z-50 md:sticky md:w-16 md:h-screen md:flex-col md:p-4 md:overflow-y-auto' 
           : 'fixed top-0 left-0 h-screen w-[65%] max-w-[280px] z-50 md:sticky md:w-64 md:h-screen md:p-4 md:overflow-y-auto'
