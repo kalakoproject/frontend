@@ -115,7 +115,9 @@ export default function RegisterPage() {
         <div className="relative flex flex-col justify-center px-10 py-12 bg-[#66023c] text-slate-100">
           <div className="text-5xl mb-4">
               <div className="absolute top-6 left-6">
+              <a href="http://localhost:3000/">
               <img src="/kalako_putih.png" alt="Kalako logo" className="h-17 w-auto" />
+            </a>
               </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-10 text-white">
