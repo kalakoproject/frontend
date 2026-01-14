@@ -706,10 +706,10 @@ function ProductFormModal({
               </select>
 
               {showAddUnitInline && (
-                <div className="mt-2 flex flex-col gap-2">
+                <div className="mt-2 flex gap-2">
                   <input
                     type="text"
-                    className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    className="border border-slate-300 flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                     placeholder="Contoh: Botol, Kardus, Kaleng"
                     value={newUnitName}
                     onChange={(e) => setNewUnitName(e.target.value)}
@@ -720,49 +720,47 @@ function ProductFormModal({
                       }
                     }}
                   />
-                  <div className="flex gap-2">
-                    <button
-                      id="btn-save-unit"
-                      type="button"
-                      className="flex-1 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={addingUnit || !newUnitName.trim()}
-                      onClick={async () => {
-                        if (!newUnitName.trim()) {
-                          alert("Nama satuan wajib diisi");
-                          return;
-                        }
-                        try {
-                          setAddingUnit(true);
-                          const created = await addRetailUnit({ name: newUnitName.trim() });
+                  <button
+                    id="btn-save-unit"
+                    type="button"
+                    className="px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                    disabled={addingUnit || !newUnitName.trim()}
+                    onClick={async () => {
+                      if (!newUnitName.trim()) {
+                        alert("Nama satuan wajib diisi");
+                        return;
+                      }
+                      try {
+                        setAddingUnit(true);
+                        const created = await addRetailUnit({ name: newUnitName.trim() });
 
-                          const newUnit = (created && created.id) ? created : { id: created?.id || Date.now(), name: newUnitName.trim() };
+                        const newUnit = (created && created.id) ? created : { id: created?.id || Date.now(), name: newUnitName.trim() };
 
-                          setLocalUnits((prev) => [...prev, newUnit]);
-                          setForm((prev) => ({ ...prev, unit: newUnit.name }));
-                          setShowAddUnitInline(false);
-                          setNewUnitName("");
-                          onCategoryAdded?.();
-                        } catch (err: any) {
-                          alert(err?.message || "Gagal menambah satuan");
-                        } finally {
-                          setAddingUnit(false);
-                        }
-                      }}
-                    >
-                      {addingUnit ? "Menyimpan..." : "Simpan"}
-                    </button>
-                    <button
-                      type="button"
-                      className="px-3 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
-                      disabled={addingUnit}
-                      onClick={() => {
+                        setLocalUnits((prev) => [...prev, newUnit]);
+                        setForm((prev) => ({ ...prev, unit: newUnit.name }));
                         setShowAddUnitInline(false);
                         setNewUnitName("");
-                      }}
-                    >
-                      Batal
-                    </button>
-                  </div>
+                        onCategoryAdded?.();
+                      } catch (err: any) {
+                        alert(err?.message || "Gagal menambah satuan");
+                      } finally {
+                        setAddingUnit(false);
+                      }
+                    }}
+                  >
+                    {addingUnit ? "Menyimpan..." : "Simpan"}
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 whitespace-nowrap"
+                    disabled={addingUnit}
+                    onClick={() => {
+                      setShowAddUnitInline(false);
+                      setNewUnitName("");
+                    }}
+                  >
+                    Batal
+                  </button>
                 </div>
               )}
             </div>
