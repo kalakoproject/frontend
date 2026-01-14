@@ -10,6 +10,8 @@ import {
   addRetailProduct,
   updateRetailProduct,
   deleteRetailProduct,
+  getRetailUnits,
+  addRetailUnit,
 } from "@/lib/api";
 import CategoryFormModal from "@/components/categoryForm";
 
@@ -27,6 +29,7 @@ export default function RetailStockPage() {
   const { isReady, user } = useProtectedPage();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<"all" | "banyak" | "sedikit" | "habis">("all");
 
@@ -59,13 +62,15 @@ export default function RetailStockPage() {
 
   async function loadData() {
     try {
-      const [prod, cats] = await Promise.all([
+      const [prod, cats, unt] = await Promise.all([
         getRetailProducts({}), // filter dilakukan di front-end
         getRetailCategories(),
+        getRetailUnits(),
       ]);
 
       setProducts(prod.items || prod || []);
       setCategories(cats || []);
+      setUnits(unt || []);
     } catch (err) {
       console.error("LOAD ERROR:", err);
     }
@@ -414,6 +419,7 @@ export default function RetailStockPage() {
         <ProductFormModal
           title="Tambah Produk"
           categories={categories}
+          units={units}
           onClose={() => setShowAddModal(false)}
           onSubmit={async (data) => {
             await addRetailProduct(data);
@@ -432,6 +438,7 @@ export default function RetailStockPage() {
           title="Edit Produk"
           initial={editProduct}
           categories={categories}
+          units={units}
           onClose={() => setEditProduct(null)}
             onSubmit={async (data) => {
             try {
@@ -550,6 +557,7 @@ function ProductFormModal({
   title,
   initial,
   categories,
+  units,
   onClose,
   onSubmit,
   onCategoryAdded,
@@ -557,6 +565,7 @@ function ProductFormModal({
   title: string;
   initial?: any;
   categories?: any[];
+  units?: any[];
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   onCategoryAdded?: () => void;
@@ -566,7 +575,7 @@ function ProductFormModal({
     selling_price: initial?.selling_price
       ? Number(initial.selling_price).toLocaleString("id-ID")
       : "",
-    unit: initial?.unit || "PCS",
+    unit: initial?.unit || "",
     stock: initial?.stock?.toString() || "",
     category_id: initial?.category_id?.toString() || "",
     expiry_date: initial?.expiry_date
@@ -577,14 +586,22 @@ function ProductFormModal({
   const [saving, setSaving] = useState(false);
   const [noExpiry, setNoExpiry] = useState<boolean>(initial ? !initial?.expiry_date : false);
   const [localCategories, setLocalCategories] = useState<any[]>(categories || []);
+  const [localUnits, setLocalUnits] = useState<any[]>(units || []);
   const [showAddInline, setShowAddInline] = useState(false);
+  const [showAddUnitInline, setShowAddUnitInline] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newUnitName, setNewUnitName] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
+  const [addingUnit, setAddingUnit] = useState(false);
 
-  // sync when parent categories change
+  // sync when parent categories or units change
   useEffect(() => {
     setLocalCategories(categories || []);
   }, [categories]);
+
+  useEffect(() => {
+    setLocalUnits(units || []);
+  }, [units]);
 
   function update(key: string, val: any) {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -593,6 +610,11 @@ function ProductFormModal({
   async function handleSave() {
     if (!form.name || !form.selling_price) {
       alert("Nama dan harga wajib diisi");
+      return;
+    }
+
+    if (!form.unit || form.unit.trim() === "") {
+      alert("Satuan wajib dipilih");
       return;
     }
 
@@ -663,12 +685,86 @@ function ProductFormModal({
               <select
                 className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                 value={form.unit}
-                onChange={(e) => update("unit", e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "__add_unit__") {
+                    setShowAddUnitInline(true);
+                    update("unit", "");
+                  } else {
+                    setShowAddUnitInline(false);
+                    update("unit", v);
+                  }
+                }}
               >
-                <option value="PCS">PCS</option>
-                <option value="KG">KG</option>
-                <option value="L">Liter</option>
+                <option value="">-- Pilih Satuan --</option>
+                {localUnits?.map((u) => (
+                  <option key={u.id} value={u.name}>
+                    {u.name}
+                  </option>
+                ))}
+                <option value="__add_unit__">➕ Tambah satuan...</option>
               </select>
+
+              {showAddUnitInline && (
+                <div className="mt-2 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    placeholder="Contoh: Botol, Kardus, Kaleng"
+                    value={newUnitName}
+                    onChange={(e) => setNewUnitName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && newUnitName.trim() && !addingUnit) {
+                        e.preventDefault();
+                        document.getElementById('btn-save-unit')?.click();
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      id="btn-save-unit"
+                      type="button"
+                      className="flex-1 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={addingUnit || !newUnitName.trim()}
+                      onClick={async () => {
+                        if (!newUnitName.trim()) {
+                          alert("Nama satuan wajib diisi");
+                          return;
+                        }
+                        try {
+                          setAddingUnit(true);
+                          const created = await addRetailUnit({ name: newUnitName.trim() });
+
+                          const newUnit = (created && created.id) ? created : { id: created?.id || Date.now(), name: newUnitName.trim() };
+
+                          setLocalUnits((prev) => [...prev, newUnit]);
+                          setForm((prev) => ({ ...prev, unit: newUnit.name }));
+                          setShowAddUnitInline(false);
+                          setNewUnitName("");
+                          onCategoryAdded?.();
+                        } catch (err: any) {
+                          alert(err?.message || "Gagal menambah satuan");
+                        } finally {
+                          setAddingUnit(false);
+                        }
+                      }}
+                    >
+                      {addingUnit ? "Menyimpan..." : "Simpan"}
+                    </button>
+                    <button
+                      type="button"
+                      className="px-3 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
+                      disabled={addingUnit}
+                      onClick={() => {
+                        setShowAddUnitInline(false);
+                        setNewUnitName("");
+                      }}
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

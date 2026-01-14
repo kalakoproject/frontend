@@ -430,6 +430,44 @@ export async function addRetailCategory(payload: { name: string }) {
 }
 
 /* ============================================================
+ *  SATUAN PRODUK
+ * ============================================================ */
+
+export async function getRetailUnits() {
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/api/retail/units`, {
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
+  });
+
+  if (!res.ok)
+  {
+    const msg = await extractErrorMessage(res, "Gagal memuat satuan");
+    throw new Error(msg || "Gagal memuat satuan");
+  }
+
+  return parseJsonSafe(res);
+}
+
+/** Tambah satuan produk */
+export async function addRetailUnit(payload: { name: string }) {
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/api/retail/units`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...tenantHeader() },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const msg = await extractErrorMessage(res, "Gagal menambah satuan");
+    throw new Error(msg || "Gagal menambah satuan");
+  }
+
+  return parseJsonSafe(res);
+}
+
+/* ============================================================
  *  TRANSAKSI KASIR
  * ============================================================ */
 
