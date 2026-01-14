@@ -59,6 +59,16 @@ html {
   background: #64748b;
 }
 
+/* Hide scrollbar for sidebar */
+.sidebar-no-scroll {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.sidebar-no-scroll::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Hide default password reveal toggle (Edge/IE) so only our custom toggle shows */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {

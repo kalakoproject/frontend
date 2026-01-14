@@ -15,38 +15,40 @@ export default function ClientShell({
 }) {
   const pathname = usePathname();
 
-  const [storeName, setStoreName] = useState("");
-  const [storePhoto, setStorePhoto] = useState<string | null>(null);
-  // when true the sidebar is collapsed to a narrow bar showing only the hamburger
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [storeName, setStoreName] = useState("Loading...");
+  const [storePhoto, setStorePhoto] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // keep the sidebar open state across navigation so it doesn't auto-close after clicks
+  // Sync sidebar state with localStorage and window size after hydration
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const stored = localStorage.getItem("sidebarCollapsed");
+    let collapsed = true;
     if (stored !== null) {
-      setSidebarCollapsed(stored === "true");
+      collapsed = stored === "true";
     } else {
-      // default collapsed on mobile, open on desktop
-      setSidebarCollapsed(window.innerWidth < 768);
+      collapsed = window.innerWidth < 768;
     }
+    setSidebarCollapsed(collapsed);
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!isHydrated) return;
     localStorage.setItem("sidebarCollapsed", sidebarCollapsed ? "true" : "false");
-  }, [sidebarCollapsed]);
+  }, [sidebarCollapsed, isHydrated]);
 
   useEffect(() => {
     const host = window.location.hostname.split(".")[0];
     const fallbackName = host.replace(/-/g, " ");
-    setStoreName(fallbackName);
+    let isMounted = true;
 
     // As a client-side fallback, check tenant status and redirect to suspended page if necessary
     (async () => {
       try {
         const base = getApiBase();
         const res = await fetch(`${base}/api/tenant/status`, { cache: 'no-store' });
+        if (!isMounted) return;
         if (res.ok) {
           const info = await res.json();
           const now = Date.now();
@@ -65,9 +67,12 @@ export default function ClientShell({
         console.error('tenant status check failed:', err);
       }
 
+      if (!isMounted) return;
+
       // Get store photo from database via API
       getClientInfo()
         .then((data) => {
+          if (!isMounted) return;
           if (data) {
             if (data.name) {
               setStoreName(String(data.name));
@@ -83,6 +88,13 @@ export default function ClientShell({
           console.error("Failed to load client info:", err);
         });
     })();
+
+    // Set initial store name
+    setStoreName(fallbackName);
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   async function handleLogout() {
@@ -114,17 +126,18 @@ export default function ClientShell({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col md:flex-row">
       {/* Backdrop so clicking outside closes sidebar (all viewports) */}
-      {!sidebarCollapsed && (
-        <div
-          className="fixed inset-0 z-40"
-          aria-hidden
-          onClick={() => setSidebarCollapsed(true)}
-        />
-      )}
+      <div
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          isHydrated && !sidebarCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        aria-hidden
+        onClick={() => setSidebarCollapsed(true)}
+      />
 
       {/* NAVBAR MOBILE / SIDEBAR DESKTOP */}
       <aside className={`
-        bg-white shadow md:sticky md:top-0 md:self-start md:flex-shrink-0
+        bg-white transition-all duration-300 ease-in-out sidebar-no-scroll
+        md:sticky md:top-0 md:self-start md:shrink-0
         ${sidebarCollapsed 
           ? 'fixed top-0 left-0 right-0 h-16 w-full z-50 md:sticky md:w-16 md:h-screen md:flex-col md:p-4 md:overflow-y-auto' 
           : 'fixed top-0 left-0 h-screen w-[65%] max-w-[280px] z-50 md:sticky md:w-64 md:h-screen md:p-4 md:overflow-y-auto'
@@ -132,34 +145,35 @@ export default function ClientShell({
         flex flex-col
       `}>
         {/* hamburger toggle (top center) - shown only when collapsed */}
-        {sidebarCollapsed && (
-          <div className="flex items-center justify-between px-4 md:flex-col md:gap-4 h-16 md:h-auto">
-            <div className="hidden md:flex md:justify-center">
-              <button
-                aria-label="Open sidebar"
-                className="p-2 rounded-md hover:bg-slate-100"
-                onClick={() => setSidebarCollapsed(false)}
-              >
-                <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
-                <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
-                <span className="block w-6 h-[2px] bg-slate-800" />
-              </button>
-            </div>
+        <div className={`flex items-center justify-between px-4 md:flex-col md:gap-4 h-16 md:h-auto transition-opacity duration-300 ${
+          sidebarCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:hidden'
+        }`}>
+          <div className="hidden md:flex md:justify-center">
             <button
-              aria-label="Open menu"
-              className="p-2 rounded-md hover:bg-slate-100 md:hidden"
+              aria-label="Open sidebar"
+              className="p-2 rounded-md hover:bg-slate-100 transition-colors"
               onClick={() => setSidebarCollapsed(false)}
             >
-              <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
-              <span className="block w-6 h-[2px] bg-slate-800 mb-1" />
-              <span className="block w-6 h-[2px] bg-slate-800" />
+              <span className="block w-6 h-0.5 bg-slate-800 mb-1" />
+              <span className="block w-6 h-0.5 bg-slate-800 mb-1" />
+              <span className="block w-6 h-0.5 bg-slate-800" />
             </button>
           </div>
-        )}
+          <button
+            aria-label="Open menu"
+            className="p-2 rounded-md hover:bg-slate-100 md:hidden transition-colors"
+            onClick={() => setSidebarCollapsed(false)}
+          >
+            <span className="block w-6 h-0.5 bg-slate-800 mb-1" />
+            <span className="block w-6 h-0.5 bg-slate-800 mb-1" />
+            <span className="block w-6 h-0.5 bg-slate-800" />
+          </button>
+        </div>
 
         {/* full content (hidden when collapsed) */}
-        {!sidebarCollapsed && (
-          <div className="flex flex-col h-full p-4 md:p-0">
+        <div className={`flex flex-col h-full p-4 md:p-0 transition-opacity duration-300 ${
+          !sidebarCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:opacity-0 md:pointer-events-none'
+        }`}>
             {/* close button (top-right) - visible when expanded */}
             <div className="flex justify-between items-center mb-4 md:mb-0 md:absolute md:right-3 md:top-3">
               <h1 className="text-lg font-bold capitalize text-black md:hidden">
@@ -182,7 +196,7 @@ export default function ClientShell({
                 width={100}
                 height={100}
                 className="rounded-md object-cover shadow-md"
-                unoptimized
+                priority
               />
               </Link>
               
@@ -212,7 +226,6 @@ export default function ClientShell({
                 alt="dashboard"
                 width={18}
                 height={18}
-                unoptimized
               />
             </div>
             <span>Dashboard</span>
@@ -230,7 +243,6 @@ export default function ClientShell({
                 alt="stok"
                 width={18}
                 height={18}
-                unoptimized
               />
             </div>
             <span>Stok Retail</span>
@@ -250,7 +262,6 @@ export default function ClientShell({
                 alt="transaksi"
                 width={18}
                 height={18}
-                unoptimized
               />
             </div>
             <span>Transaksi Kasir</span>
@@ -270,7 +281,6 @@ export default function ClientShell({
                 alt="histori"
                 width={18}
                 height={18}
-                unoptimized
               />
             </div>
             <span>Histori Transaksi</span>
@@ -288,14 +298,13 @@ export default function ClientShell({
                 alt="laporan"
                 width={18}
                 height={18}
-                unoptimized
               />
             </div>
             <span>Laporan Keuangan</span>
           </Link>
           </nav>
 
-            <div className="pt-6 border-t border-slate-200">
+            <div className="pt-6">
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-3 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all duration-200"
@@ -303,8 +312,7 @@ export default function ClientShell({
                 Logout
               </button>
             </div>
-          </div>
-        )}
+        </div>
       </aside>
 
       {/* MAIN CONTENT */}
