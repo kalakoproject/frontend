@@ -2,6 +2,12 @@
  * Auth utilities untuk check token dan validasi
  */
 
+function resolveCookieDomain(hostname: string) {
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+  if (hostname === "localhost" || hostname.startsWith("localhost:")) return "";
+  return hostname.endsWith(baseDomain) ? `.${baseDomain}` : "";
+}
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token");
@@ -14,17 +20,7 @@ export function setToken(token: string): void {
   // Set ke cookie juga untuk middleware
   // Cookie harus share ke semua subdomain .kalako.local
   const hostname = window.location.hostname;
-  
-  // Tentukan domain untuk cookie
-  let cookieDomain = "";
-  if (hostname.includes("portorey.my.id")) {
-    // Set domain ke .kalako.local agar accessible di semua subdomain
-    // kalako.local, toko-maju.kalako.local, dll
-    cookieDomain = ".portorey.my.id";
-  } else if (hostname === "localhost" || hostname.startsWith("localhost:")) {
-    // Untuk localhost, jangan set domain (same-origin only)
-    cookieDomain = "";
-  }
+  const cookieDomain = resolveCookieDomain(hostname);
   
   const expiresDate = new Date();
   expiresDate.setTime(expiresDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 hari
@@ -42,7 +38,7 @@ export function setAdminToken(token: string): void {
 
   // Admin token only needs to be available on root domain
   const hostname = window.location.hostname;
-  const cookieDomain = hostname.includes("portorey.my.id") ? ".portorey.my.id" : "";
+  const cookieDomain = resolveCookieDomain(hostname);
 
   const expiresDate = new Date();
   expiresDate.setTime(expiresDate.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -58,10 +54,7 @@ export function removeToken(): void {
   
   // Clear cookie dengan domain yang sama
   const hostname = window.location.hostname;
-  let cookieDomain = "";
-  if (hostname.includes("portorey.my.id")) {
-    cookieDomain = ".portorey.my.id";
-  }
+  const cookieDomain = resolveCookieDomain(hostname);
 
   // Hapus cookie untuk kedua kemungkinan: tanpa domain dan dengan domain root
   // (penting karena beberapa browser menyimpan cookie dengan variasi berbeda)

@@ -59,6 +59,12 @@ export default function LoginPage() {
       ? `Login untuk toko: ${subdomain}`
       : "Subtitle lagi terkait jusul masuk di atas";
 
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
+  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const portPart = frontendPort ? `:${frontendPort}` : "";
+  const registerUrl = `${protocol}//${baseDomain}${portPart}/register`;
+
   return (
     <main className="w-full min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
@@ -168,7 +174,7 @@ export default function LoginPage() {
             <p className="text-sm text-center text-slate-600 mt-6">
               Belum punya akun?{" "}
               <a
-                href="http://portorey.my.id/register"
+                href={registerUrl}
                 className="font-semibold text-blue-700 hover:underline"
               >
                 Daftar Disini

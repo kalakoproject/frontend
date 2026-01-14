@@ -14,17 +14,18 @@
  */
 export function getApiBase() {
   const override = process.env.NEXT_PUBLIC_API_BASE;
+  const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
   // === CLIENT SIDE ===
   if (typeof window !== "undefined") {
     if (override && override.trim().length > 0) {
       return override.trim();
     }
     const host = window.location.hostname.split(":")[0];
-    return `http://${host}`;
+    return `http://${host}:${apiPort}`;
   }
 
   // === SERVER SIDE ===
-  return override || "http://localhost:4000";
+  return override || `http://localhost:${apiPort}`;
 }
 
 /* ============================================================
@@ -41,7 +42,7 @@ export function authHeaders(): Record<string, string> {
 // Header identitas tenant untuk API global
 export function tenantHeader(): Record<string, string> {
   if (typeof window === "undefined") return {};
-  const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "portorey.my.id";
+  const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
   const host = window.location.hostname.split(":")[0];
   const hostParts = host.split(".");
   const baseParts = BASE_DOMAIN.split(".");
@@ -227,7 +228,7 @@ export async function login(payload: { username: string; password: string }) {
   return parseJsonSafe(res);
 }
 
-/** Login untuk admin (super_admin). Hanya dipanggil dari halaman admin di portorey.my.id/admin/login */
+/** Login untuk admin (super_admin). Hanya dipanggil dari halaman admin di BASE_DOMAIN/admin/login */
 export async function loginAdmin(payload: { username: string; password: string }) {
   const base = getApiBase();
 
@@ -645,4 +646,3 @@ export async function rejectPayment(paymentId: number, note?: string) {
 
   return parseJsonSafe(res);
 }
-

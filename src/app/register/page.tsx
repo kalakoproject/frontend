@@ -95,7 +95,11 @@ export default function RegisterPage() {
       setSuccess("Pendaftaran berhasil, mengalihkan ke halaman login toko...");
 
       const subdomain = resp.client.subdomain;
-      window.location.href = `http://${subdomain}.portorey.my.id/login`;
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
+  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const portPart = frontendPort ? `:${frontendPort}` : "";
+  window.location.href = `${protocol}//${subdomain}.${baseDomain}${portPart}/login`;
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -111,7 +115,9 @@ export default function RegisterPage() {
         <div className="relative flex flex-col justify-center px-10 py-12 bg-[#66023c] text-slate-100">
           <div className="text-5xl mb-4">
               <div className="absolute top-6 left-6">
+              <a href="http://localhost:3000/">
               <img src="/kalako_putih.png" alt="Kalako logo" className="h-17 w-auto" />
+            </a>
               </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-10 text-white">

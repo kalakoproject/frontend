@@ -113,12 +113,21 @@ export default function ClientShell({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col md:flex-row">
+      {/* Backdrop so clicking outside closes sidebar (all viewports) */}
+      {!sidebarCollapsed && (
+        <div
+          className="fixed inset-0 z-40"
+          aria-hidden
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
       {/* NAVBAR MOBILE / SIDEBAR DESKTOP */}
       <aside className={`
-        bg-white shadow transition-all
+        bg-white shadow md:sticky md:top-0 md:self-start md:flex-shrink-0
         ${sidebarCollapsed 
-          ? 'fixed top-0 left-0 right-0 h-16 w-full z-50 md:relative md:w-16 md:h-screen md:flex-col md:p-4 md:overflow-y-auto' 
-          : 'fixed top-0 left-0 h-screen w-[65%] max-w-[280px] z-50 md:relative md:w-64 md:h-screen md:p-4 md:overflow-y-auto'
+          ? 'fixed top-0 left-0 right-0 h-16 w-full z-50 md:sticky md:w-16 md:h-screen md:flex-col md:p-4 md:overflow-y-auto' 
+          : 'fixed top-0 left-0 h-screen w-[65%] max-w-[280px] z-50 md:sticky md:w-64 md:h-screen md:p-4 md:overflow-y-auto'
         }
         flex flex-col
       `}>
@@ -153,12 +162,12 @@ export default function ClientShell({
           <div className="flex flex-col h-full p-4 md:p-0">
             {/* close button (top-right) - visible when expanded */}
             <div className="flex justify-between items-center mb-4 md:mb-0 md:absolute md:right-3 md:top-3">
-              <h1 className="text-lg font-bold capitalize md:hidden">
+              <h1 className="text-lg font-bold capitalize text-black md:hidden">
                 {storeName}
               </h1>
               <button
                 aria-label="Tutup menu"
-                className="p-2 rounded-md hover:bg-slate-100"
+                className="p-4 rounded-md hover:bg-slate-100 text-black font-extrabold text-xl"
                 onClick={() => setSidebarCollapsed(true)}
               >
                 ✕
@@ -291,7 +300,7 @@ export default function ClientShell({
                 onClick={handleLogout}
                 className="w-full px-4 py-3 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all duration-200"
               >
-                🚪 Logout
+                Logout
               </button>
             </div>
           </div>
