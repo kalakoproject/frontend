@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { logout, getClientInfo, getApiBase } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 export default function ClientShell({
   title,
@@ -19,23 +19,21 @@ export default function ClientShell({
   const [storePhoto, setStorePhoto] = useState<string | null>(null);
   // when true the sidebar is collapsed to a narrow bar showing only the hamburger
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
-  // keep the sidebar open state across navigation so it doesn't auto-close after clicks
-  useEffect(() => {
+  // keep the sidebar open state across navigation so it doesn't auto-close after clicks (hydrate instantly to avoid flash)
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem("sidebarCollapsed");
-    if (stored !== null) {
-      setSidebarCollapsed(stored === "true");
-    } else {
-      // default collapsed on mobile, open on desktop
-      setSidebarCollapsed(window.innerWidth < 768);
-    }
+    const initial = stored !== null ? stored === "true" : window.innerWidth < 768;
+    setSidebarCollapsed(initial);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !hydrated) return;
     localStorage.setItem("sidebarCollapsed", sidebarCollapsed ? "true" : "false");
-  }, [sidebarCollapsed]);
+  }, [sidebarCollapsed, hydrated]);
 
   useEffect(() => {
     const host = window.location.hostname.split(".")[0];
@@ -111,6 +109,10 @@ export default function ClientShell({
     }
   }
 
+  const sidebarContentState = sidebarCollapsed
+    ? "opacity-0 -translate-x-2 pointer-events-none"
+    : "opacity-100 translate-x-0 pointer-events-auto";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col md:flex-row">
       {/* Backdrop so clicking outside closes sidebar (all viewports) */}
@@ -157,9 +159,11 @@ export default function ClientShell({
           </div>
         )}
 
-        {/* full content (hidden when collapsed) */}
-        {!sidebarCollapsed && (
-          <div className="flex flex-col h-full p-4 md:p-0">
+        {/* full content (kept mounted; show/hide via opacity to avoid remount delay) */}
+        <div
+          className={`flex flex-col h-full p-4 md:p-0 transition-all duration-150 ease-out ${sidebarContentState}`}
+          aria-hidden={sidebarCollapsed}
+        >
             {/* close button (top-right) - visible when expanded */}
             <div className="flex justify-between items-center mb-4 md:mb-0 md:absolute md:right-3 md:top-3">
               <h1 className="text-lg font-bold capitalize text-black md:hidden">
@@ -167,7 +171,7 @@ export default function ClientShell({
               </h1>
               <button
                 aria-label="Tutup menu"
-                className="p-4 rounded-md hover:bg-slate-100 text-black font-extrabold text-xl"
+                className="p-3 rounded-md hover:bg-slate-100 text-black font-extrabold text-xl -translate-y-[8px] md:-translate-y-[20px] translate-x-[10px] md:translate-x-[12px]"
                 onClick={() => setSidebarCollapsed(true)}
               >
                 ✕
@@ -303,8 +307,7 @@ export default function ClientShell({
                 Logout
               </button>
             </div>
-          </div>
-        )}
+        </div>
       </aside>
 
       {/* MAIN CONTENT */}

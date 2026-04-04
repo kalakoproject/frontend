@@ -98,6 +98,7 @@ export function middleware(req: NextRequest) {
      */
     if (
       pathname.startsWith("/login") ||
+      pathname.startsWith("/auto-login") ||
       pathname.startsWith("/suspended") ||
       pathname.startsWith("/payments") ||
       pathname.startsWith("/api")

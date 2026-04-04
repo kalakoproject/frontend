@@ -58,6 +58,7 @@ const Navbar: React.FC = () => {
             <a href="#vision" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Visi Misi</a>
             <a href="#values" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Nilai</a>
             <a href="#servis" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Fitur</a>
+            <a href="https://drive.google.com/drive/folders/1Rjm0g3WFuHQjbdlERR3GBtal5VmdWtFO?usp=sharing" className="text-[#4b5563] hover:text-[#875A7B] font-medium transition-colors">Tutorial</a>
           </div>
 
           {/* Bagian Kanan: Login dan Button */}

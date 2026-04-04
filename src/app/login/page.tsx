@@ -60,8 +60,10 @@ export default function LoginPage() {
       : "Subtitle lagi terkait jusul masuk di atas";
 
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
-  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
-  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const isLocal = baseDomain.endsWith(".local") || baseDomain === "localhost";
+  // Gunakan protokol deterministik agar render server & client sama (hindari hydration mismatch)
+  const protocol = isLocal ? "http:" : "https:";
+  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || (isLocal ? "3000" : "");
   const portPart = frontendPort ? `:${frontendPort}` : "";
   const registerUrl = `${protocol}//${baseDomain}${portPart}/register`;
 

@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { sendOtpEmail, signupClientWithOtp, checkEmailAvailability } from "@/lib/api";
 import ImageUploader from "@/components/imageUploader";
 
+const RequiredMark = () => <span className="ml-1 text-red-600">*</span>;
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -92,14 +94,10 @@ export default function RegisterPage() {
         store_photo_url: String(fd.get("store_photo_url") || ""),
       });
 
-      setSuccess("Pendaftaran berhasil, mengalihkan ke halaman login toko...");
+        setSuccess("Pendaftaran berhasil, mengalihkan ke halaman login toko...");
 
-      const subdomain = resp.client.subdomain;
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
-  const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
-  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
-  const portPart = frontendPort ? `:${frontendPort}` : "";
-  window.location.href = `${protocol}//${subdomain}.${baseDomain}${portPart}/login`;
+        // Redirect langsung ke root-login portorey setelah daftar
+        window.location.href = "https://portorey.my.id/root-login";
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -115,7 +113,7 @@ export default function RegisterPage() {
         <div className="relative flex flex-col justify-center px-10 py-12 bg-[#66023c] text-slate-100">
           <div className="text-5xl mb-4">
               <div className="absolute top-6 left-6">
-              <a href="http://localhost:3000/">
+              <a href="https://portorey.my.id/">
               <img src="/kalako_putih.png" alt="Kalako logo" className="h-17 w-auto" />
             </a>
               </div>
@@ -178,6 +176,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-800 mb-2">
                     👤 Nama Pemilik / PIC
+                    <RequiredMark />
                   </label>
                   <input
                     name="owner_name"
@@ -189,6 +188,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-800 mb-2">
                     🏪 Nama Toko / Brand
+                    <RequiredMark />
                   </label>
                   <input
                     name="store_name"
@@ -203,6 +203,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <label className="block text-sm text-black font-semibold text-slate-800 mb-1">
                   📧 Email
+                  <RequiredMark />
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -237,7 +238,36 @@ export default function RegisterPage() {
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
+                    🔐 Kode OTP
+                    <RequiredMark />
+                  </label>
+                  <input
+                    name="otp"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    placeholder="6 digit dari email"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
+                    🔑 Password
+                    <RequiredMark />
+                  </label>
+                  <input
+                    name="password"
+                    type="password"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                    placeholder="Minimal 6 karakter"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📱 Nomor Whatsapp
+                    <RequiredMark />
                   </label>
                   <input
                     name="phone"
@@ -248,38 +278,13 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
-                    🔐 Username Login
+                    🔐 Nama Pengguna Login
+                    <RequiredMark />
                   </label>
                   <input
                     name="username"
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                     placeholder="username (unik per toko)"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
-                    🔑 Password
-                  </label>
-                  <input
-                    name="password"
-                    type="password"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                    placeholder="Minimal 6 karakter"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
-                    🔐 Kode OTP
-                  </label>
-                  <input
-                    name="otp"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                    placeholder="6 digit dari email"
                     required
                   />
                 </div>
@@ -300,6 +305,7 @@ export default function RegisterPage() {
               <div>
                 <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                   📍 Alamat Lengkap
+                  <RequiredMark />
                 </label>
                 <textarea
                   name="address"
@@ -313,6 +319,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🏙️ Kota / Kabupaten
+                    <RequiredMark />
                   </label>
                   <input
                     name="city"
@@ -323,6 +330,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     🗺️ Provinsi
+                    <RequiredMark />
                   </label>
                   <input
                     name="province"
@@ -336,6 +344,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📌 Kecamatan
+                    <RequiredMark />
                   </label>
                   <input
                     name="district"
@@ -346,6 +355,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm text-black font-semibold text-slate-800 mb-2">
                     📍 Kelurahan / Desa
+                    <RequiredMark />
                   </label>
                   <input
                     name="sub_district"

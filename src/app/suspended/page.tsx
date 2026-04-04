@@ -5,21 +5,27 @@ import ImageUploader from "@/components/imageUploader";
 import { submitPayment, getApiBase } from "@/lib/api";
 
 export default function SuspendedPage() {
-  const [amount, setAmount] = useState<number | ''>('');
+  const [amount, setAmount] = useState<string>('');
   const [note, setNote] = useState("");
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function formatAmount(value: string) {
+    const digitsOnly = value.replace(/\D/g, "");
+    return digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!amount || !proofUrl) {
+    const numericAmount = Number(String(amount).replace(/\./g, ""));
+    if (!numericAmount || !proofUrl) {
       alert("Isi jumlah dan unggah bukti pembayaran");
       return;
     }
 
     try {
       setLoading(true);
-      await submitPayment({ amount: Number(amount), note, proof_url: proofUrl });
+      await submitPayment({ amount: numericAmount, note, proof_url: proofUrl });
       alert("Pembayaran dikirim. Menunggu approval super admin.");
       setAmount('');
       setNote('');
@@ -53,16 +59,16 @@ export default function SuspendedPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-black">
       <div className="max-w-3xl w-full bg-white rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold mb-2">Akun Anda Ditangguhkan</h1>
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-black mb-4">
           Layanan untuk subdomain ini ditangguhkan karena tagihan belum dibayar. Untuk mengaktifkan kembali, silakan unggah bukti pembayaran di bawah.
         </p>
 
         <div className="mb-6 border rounded p-4 bg-slate-50">
           <h2 className="font-medium mb-2">Instruksi Pembayaran</h2>
-          <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1">
+          <ol className="list-decimal list-inside text-sm text-black space-y-1">
             <li>Transfer sesuai tagihan ke rekening yang tersedia.</li>
             <li>Simpan bukti transfer (foto/scan).</li>
             <li>Unggah bukti di bawah dan masukkan jumlah serta catatan.</li>
@@ -72,19 +78,19 @@ export default function SuspendedPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Jumlah (Rp)</label>
+            <label className="block text-sm font-medium text-black">Jumlah (Rp)</label>
             <input
-              type="number"
+              inputMode="numeric"
               value={amount}
-              onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="mt-1 block w-full rounded border px-3 py-2"
-              placeholder="100000"
+              onChange={(e) => setAmount(formatAmount(e.target.value))}
+              className="mt-1 block w-full rounded border px-3 py-2 text-black placeholder:text-black"
+              placeholder="100.000"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Catatan (opsional)</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block w-full rounded border px-3 py-2" />
+            <label className="block text-sm font-medium text-black">Catatan (opsional)</label>
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block w-full rounded border px-3 py-2 text-black placeholder:text-black" />
           </div>
 
           <div>
@@ -92,14 +98,14 @@ export default function SuspendedPage() {
             <div className="mt-2">
               <ImageUploader onUploaded={(url) => setProofUrl(url)} />
             </div>
-            {proofUrl && <div className="mt-2 text-sm text-slate-600">Preview: <a className="text-blue-600" href={proofUrl} target="_blank" rel="noreferrer">lihat</a></div>}
+            {proofUrl && <div className="mt-2 text-sm text-black">Preview: <a className="underline text-black" href={proofUrl} target="_blank" rel="noreferrer">lihat</a></div>}
           </div>
 
           <div className="flex items-center gap-3">
             <button disabled={loading} type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">
               {loading ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
             </button>
-            <a href="/" className="text-sm text-slate-600">Kembali ke beranda</a>
+            <a href="/" className="text-sm text-black">Kembali ke beranda</a>
           </div>
         </form>
       </div>

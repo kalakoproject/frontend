@@ -18,6 +18,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { FileSpreadsheet, FileText } from "lucide-react";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -48,8 +49,8 @@ export default function LaporanPage() {
     yearly: "Tahun Ini",
   };
 
-  const titleTopProduk = `📋 Top Produk (${rangeLabel[range]})`;
-  const titleChart = `📊 Penjualan ${rangeLabel[range]}`;
+  const titleTopProduk = `Top Produk (${rangeLabel[range]})`;
+  const titleChart = `Penjualan ${rangeLabel[range]}`;
   const datasetLabel = `Penjualan ${rangeLabel[range]} (Rp)`;
 
   useEffect(() => {
@@ -244,13 +245,15 @@ export default function LaporanPage() {
                   onClick={() => handleExport("pdf")}
                   className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
                 >
-                  📄 Export PDF
+                  <FileText size={16} />
+                  Export PDF
                 </button>
                 <button
                   onClick={() => handleExport("excel")}
                   className="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition flex items-center justify-center gap-2"
                 >
-                  📊 Export Excel
+                  <FileSpreadsheet size={16} />
+                  Export Excel
                 </button>
               </div>
               <p className="text-xs text-slate-400 mt-2">Unduh laporan periode {rangeLabel[range]}</p>

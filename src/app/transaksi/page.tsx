@@ -380,7 +380,7 @@ export default function TransaksiPage() {
                       className="text-center text-slate-500 py-12 text-sm sm:text-base"
                       colSpan={8}
                     >
-                      📭 Belum ada item. Gunakan pencarian di atas untuk
+                      ❌ Belum ada item. Gunakan pencarian di atas untuk
                       menambahkan produk.
                     </td>
                   </tr>

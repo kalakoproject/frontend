@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ClientShell from "@/components/clientShell";
 import { useProtectedPage } from "@/lib/hooks";
 import { getTransactionHistory, getTransactionItems, getApiBase, getClientInfo } from "@/lib/api";
+import { FileSpreadsheet, FileText } from "lucide-react";
 
 interface Transaction {
   id: number;
@@ -298,7 +299,7 @@ export default function HistoriTransaksiPage() {
               <div className="flex flex-col sm:flex-row gap-3 items-center">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
-                    📅 Dari:
+                     Dari:
                   </span>
                   <input
                     type="date"
@@ -310,7 +311,7 @@ export default function HistoriTransaksiPage() {
                 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
-                    📅 Sampai:
+                    Sampai:
                   </span>
                   <input
                     type="date"
@@ -327,21 +328,23 @@ export default function HistoriTransaksiPage() {
                   }}
                   className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  🔄 Hari Ini
+                  Refresh
                 </button>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleExport("pdf")}
                     className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    📄 Export PDF
+                    <FileText size={16} />
+                    Export PDF
                   </button>
                   
                   <button
                     onClick={() => handleExport("excel")}
                     className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    📊 Export Excel
+                    <FileSpreadsheet size={16} />
+                    Export Excel
                   </button>
                 </div>
               </div>

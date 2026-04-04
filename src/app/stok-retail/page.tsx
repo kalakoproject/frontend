@@ -173,11 +173,11 @@ export default function RetailStockPage() {
             <div className="mt-2 flex flex-wrap gap-2 items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs px-2.5 py-0.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                sisa 3 Bulan
+                Sisa kadaluarsa masih lama
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500 text-white text-xs px-2.5 py-0.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-white/80" />
-                Sisa 1 bulan kadaluarsa
+                Kadaluarsa sisa 1 bulan
               </span>
             </div>
           </div>
@@ -607,6 +607,29 @@ function ProductFormModal({
     setForm((prev) => ({ ...prev, [key]: val }));
   }
 
+  async function handleSaveUnit() {
+    if (!newUnitName.trim()) {
+      alert("Nama satuan wajib diisi");
+      return;
+    }
+    try {
+      setAddingUnit(true);
+      const created = await addRetailUnit({ name: newUnitName.trim() });
+
+      const newUnit = (created && created.id) ? created : { id: created?.id || Date.now(), name: newUnitName.trim() };
+
+      setLocalUnits((prev) => [...prev, newUnit]);
+      setForm((prev) => ({ ...prev, unit: newUnit.name }));
+      setShowAddUnitInline(false);
+      setNewUnitName("");
+      onCategoryAdded?.();
+    } catch (err: any) {
+      alert(err?.message || "Gagal menambah satuan");
+    } finally {
+      setAddingUnit(false);
+    }
+  }
+
   async function handleSave() {
     if (!form.name || !form.selling_price) {
       alert("Nama dan harga wajib diisi");
@@ -706,65 +729,42 @@ function ProductFormModal({
               </select>
 
               {showAddUnitInline && (
-                <div className="mt-2 flex flex-col gap-2">
-                  <input
-                    type="text"
-                    className="border border-slate-300 w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    placeholder="Contoh: Botol, Kardus, Kaleng"
-                    value={newUnitName}
-                    onChange={(e) => setNewUnitName(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && newUnitName.trim() && !addingUnit) {
-                        e.preventDefault();
-                        document.getElementById('btn-save-unit')?.click();
-                      }
-                    }}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      id="btn-save-unit"
-                      type="button"
-                      className="flex-1 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={addingUnit || !newUnitName.trim()}
-                      onClick={async () => {
-                        if (!newUnitName.trim()) {
-                          alert("Nama satuan wajib diisi");
-                          return;
-                        }
-                        try {
-                          setAddingUnit(true);
-                          const created = await addRetailUnit({ name: newUnitName.trim() });
+        <form
+  className="relative z-50 mt-2 flex items-center gap-2"
+  onSubmit={(e) => {
+    e.preventDefault();
+    handleSaveUnit();
+  }}
+>
+          <input
+            type="text"
+            className="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm"
+            placeholder="Contoh: Botol, Kardus"
+            value={newUnitName}
+            onChange={(e) => setNewUnitName(e.target.value)}
+            autoFocus
+          />
 
-                          const newUnit = (created && created.id) ? created : { id: created?.id || Date.now(), name: newUnitName.trim() };
+          <button
+            type="submit"
+            disabled={addingUnit}
+            className="px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {addingUnit ? "Menyimpan..." : "Simpan"}
+          </button>
 
-                          setLocalUnits((prev) => [...prev, newUnit]);
-                          setForm((prev) => ({ ...prev, unit: newUnit.name }));
-                          setShowAddUnitInline(false);
-                          setNewUnitName("");
-                          onCategoryAdded?.();
-                        } catch (err: any) {
-                          alert(err?.message || "Gagal menambah satuan");
-                        } finally {
-                          setAddingUnit(false);
-                        }
-                      }}
-                    >
-                      {addingUnit ? "Menyimpan..." : "Simpan"}
-                    </button>
-                    <button
-                      type="button"
-                      className="px-3 py-2 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
-                      disabled={addingUnit}
-                      onClick={() => {
-                        setShowAddUnitInline(false);
-                        setNewUnitName("");
-                      }}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
-              )}
+          <button
+            type="button"
+            className="px-3 py-2 text-sm rounded-md border border-slate-300"
+            onClick={() => {
+              setShowAddUnitInline(false);
+              setNewUnitName("");
+            }}
+          >
+            Batal
+          </button>
+        </form>
+      )}
             </div>
 
             <div>

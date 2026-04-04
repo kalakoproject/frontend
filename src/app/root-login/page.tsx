@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { setToken } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { getApiBase } from "@/lib/api";
@@ -11,6 +11,30 @@ export default function RootLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("rootLoginRemember");
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as { email?: string; password?: string };
+      setRememberMe(true);
+      setEmail(parsed.email || "");
+      setPassword(parsed.password || "");
+    } catch (e) {
+      // ignore parsing issues
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (rememberMe) {
+      localStorage.setItem("rootLoginRemember", JSON.stringify({ email, password }));
+    } else {
+      localStorage.removeItem("rootLoginRemember");
+    }
+  }, [rememberMe, email, password]);
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -36,14 +60,16 @@ export default function RootLoginPage() {
       // Simpan token (localStorage + cookie) dulu di root domain
       setToken(data.token);
 
-      // Redirect ke subdomain dengan fallback token di URL
+      // Redirect ke subdomain dan langsung auto-set token (tanpa melewati form login subdomain)
       const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
-      const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT || "3000";
+      // Default port only for local/dev; leave empty in production domains
+      const isLocal = baseDomain.endsWith(".local") || baseDomain === "localhost";
+      const frontendPort = process.env.NEXT_PUBLIC_FRONTEND_PORT ?? (isLocal ? "3000" : "");
       const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
       const portPart = frontendPort ? `:${frontendPort}` : "";
-      const targetUrl = `${protocol}//${data.subdomain}.${baseDomain}${portPart}/login?auto_token=${encodeURIComponent(
+      const targetUrl = `${protocol}//${data.subdomain}.${baseDomain}${portPart}/auto-login?token=${encodeURIComponent(
         data.token
-      )}`;
+      )}&next=/dashboard`;
       window.location.href = targetUrl;
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan");
@@ -102,6 +128,15 @@ export default function RootLoginPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-[#9F0069] focus:ring-[#DF0093]"
+              />
+              <span>Ingat saya</span>
+            </label>
           </div>
 
           {error && (

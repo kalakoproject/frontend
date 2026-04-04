@@ -556,8 +556,14 @@ export async function logout() {
     // Import di sini untuk avoid circular dependency
     const { removeToken } = await import("@/lib/auth");
     removeToken();
-    // Gunakan replace agar tidak bisa kembali ke halaman sebelumnya
-    window.location.replace("/login");
+    // Redirect selalu ke halaman root-login di domain utama
+    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "kalako.local";
+    const isLocal = baseDomain.endsWith(".local") || baseDomain === "localhost";
+    const protocol = isLocal ? "http:" : "https:";
+    const port = process.env.NEXT_PUBLIC_FRONTEND_PORT || (isLocal ? "3000" : "");
+    const portPart = port ? `:${port}` : "";
+    const target = `${protocol}//${baseDomain}${portPart}/root-login`;
+    window.location.replace(target);
   }
 }
 
